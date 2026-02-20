@@ -17,7 +17,7 @@ namespace AppsTime
         private readonly MainWindow _mainWindow;
         private CustomColors _currentColors;
         private ObservableCollection<string> _excludedList;
-        public CustomColors UpdatedColors { get; private set; } // 👈 Новое свойство
+        public CustomColors UpdatedColors { get; private set; }
 
         public SettingsWindow(MainWindow owner, CustomData customData, CustomColors colors)
         {
@@ -26,10 +26,11 @@ namespace AppsTime
             _customData = customData;
             _mainWindow = owner;
             _currentColors = colors;
-            UpdatedColors = colors; // Инициализируем
+            UpdatedColors = colors;
 
             LoadColors();
             LoadExcludedApps();
+            LoadGeneralSettings();
         }
 
         #region Colors
@@ -313,6 +314,96 @@ namespace AppsTime
                     foreach (T childOfChild in FindVisualChildren<T>(child))
                         yield return childOfChild;
                 }
+            }
+        }
+
+        #endregion
+        #region General Settings
+
+        private void LoadGeneralSettings()
+        {
+            // Загружаем текущий формат
+            string currentFormat = _customData.TimeFormat ?? "hh_mm_ss";
+
+            // Выбираем нужный пункт в ComboBox
+            foreach (var item in ComboBoxTimeFormat.Items)
+            {
+                if (item is ComboBoxItem comboItem &&
+                    comboItem.Tag?.ToString() == currentFormat)
+                {
+                    ComboBoxTimeFormat.SelectedItem = item;
+                    break;
+                }
+            }
+
+            // Обновляем превью
+            UpdateTimeFormatPreview();
+        }
+
+        private void ComboBoxTimeFormat_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateTimeFormatPreview();
+        }
+
+        private void UpdateTimeFormatPreview()
+        {
+            if (ComboBoxTimeFormat.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string format = selectedItem.Tag?.ToString() ?? "hh_mm_ss";
+                int sampleSeconds = 456789; // Пример: 127 часов
+
+                string preview = FormatTime(sampleSeconds, format);
+                TextBlockTimePreview.Text = preview;
+            }
+        }
+
+        private string FormatTime(int totalSeconds, string format)
+        {
+            var time = TimeSpan.FromSeconds(totalSeconds);
+
+            return format switch
+            {
+                "hours_int" => $"{(int)time.TotalHours} часов",
+                "hours_float" => $"{time.TotalHours:F1} часов",
+                "hh_mm" => $"{(int)time.TotalHours}:{time.Minutes:D2}",
+                "hh_mm_ss" => $"{(int)time.TotalHours}:{time.Minutes:D2}:{time.Seconds:D2}",
+                "dd_hh_mm" => $"{(int)time.TotalDays}:{time.Hours:D2}:{time.Minutes:D2}",
+                "dd_hh_mm_ss" => $"{(int)time.TotalDays}:{time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}",
+                _ => $"{(int)time.TotalHours}:{time.Minutes:D2}:{time.Seconds:D2}"
+            };
+        }
+
+        private void ButtonApplySettings_Click(object sender, RoutedEventArgs e)
+        {
+            // Сохраняем формат времени
+            if (ComboBoxTimeFormat.SelectedItem is ComboBoxItem selectedItem)
+            {
+                _customData.TimeFormat = selectedItem.Tag?.ToString() ?? "hh_mm_ss";
+                CustomDataManager.Save(_customData);
+
+                // Обновляем главное окно
+                _mainWindow.RefreshTimeFormat();
+
+                MessageBox.Show("Настройки применены!", "Успешно",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void ButtonResetSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show("Сбросить настройки к значениям по умолчанию?",
+                "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _customData.TimeFormat = "hh_mm_ss";
+                CustomDataManager.Save(_customData);
+
+                LoadGeneralSettings();
+                _mainWindow.RefreshTimeFormat();
+
+                MessageBox.Show("Настройки сброшены!", "Сброшено",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

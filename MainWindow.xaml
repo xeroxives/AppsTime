@@ -42,12 +42,114 @@
                  behaviors:SmoothScrollBehavior.EnableSmoothScroll="True"
                  SelectionChanged="ListBoxAllTime_SelectionChanged"
                  HorizontalContentAlignment="Stretch">
+            <ListBox.ContextMenu>
+                <ContextMenu x:Name="ListBoxContextMenu"
+                 Background="{StaticResource PanelBackgroundBrush}"
+                 Foreground="{StaticResource TextPrimaryBrush}"
+                 BorderBrush="{StaticResource ListBoxBorderBrush}"
+                 BorderThickness="1"
+                 Padding="0"
+                 Margin="0">
 
+                    <ContextMenu.Resources>
+                        <!-- 👇 Стиль для самого ContextMenu -->
+                        <Style TargetType="ContextMenu">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ContextMenu">
+                                        <Border x:Name="Border"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="0">
+                                            <StackPanel IsItemsHost="True" 
+                                            KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+
+                        <!-- 👇 Стиль для MenuItem -->
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Padding" Value="10,5,20,5"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Border x:Name="Border"
+                                    Background="Transparent"
+                                    Padding="{TemplateBinding Padding}"
+                                    Margin="0">
+                                            <ContentPresenter Content="{TemplateBinding Header}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+
+                        <!-- 👇 Стиль для Separator -->
+                        <Style TargetType="Separator">
+                            <Setter Property="Margin" Value="0,2,0,2"/>
+                            <Setter Property="Background" Value="{StaticResource ListBoxBorderBrush}"/>
+                        </Style>
+                    </ContextMenu.Resources>
+
+                    <!-- Исключить -->
+                    <MenuItem x:Name="MenuExclude"
+                  Header="🚫 Исключить"
+                  Click="MenuExclude_Click"/>
+
+                    <Separator/>
+
+                    <!-- Объединить -->
+                    <MenuItem x:Name="MenuCombine"
+                              Header="🔗 Объединить"
+                              Click="MenuCombine_Click"
+                              IsEnabled="False"/>
+
+                    <!-- Установить тег -->
+                    <MenuItem x:Name="MenuSetTag"
+                              Header="🏷️ Установить тег"
+                              Click="MenuSetTag_Click"
+                              IsEnabled="False"/>
+
+                    <Separator/>
+
+                    <!-- Сбросить время -->
+                    <MenuItem x:Name="MenuResetTime"
+                  Header="🔄 Сбросить время"
+                  Click="MenuResetTime_Click"/>
+
+                    <Separator/>
+
+                    <!-- Копировать имя -->
+                    <MenuItem x:Name="MenuCopyName"
+                  Header="📋 Копировать имя"
+                  Click="MenuCopyName_Click"/>
+
+                    <!-- Копировать время -->
+                    <MenuItem x:Name="MenuCopyTime"
+                  Header="📋 Копировать время"
+                  Click="MenuCopyTime_Click"/>
+
+                </ContextMenu>
+            </ListBox.ContextMenu>
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <Setter Property="Foreground" Value="{StaticResource ListBoxTextBrush}"/>
                     <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="Padding" Value="5,2"/>
+                    <!--<Setter Property="Padding" Value="0"/>-->
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
@@ -149,7 +251,8 @@
                         VerticalAlignment="Center"
                         Foreground="{StaticResource ButtonTextBrush}"
                         BorderThickness="0"
-                        FontSize="13">
+                        FontSize="13"
+                        Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="{StaticResource ButtonExcludeBrush}"/>
@@ -175,7 +278,8 @@
                         VerticalAlignment="Center"
                         Foreground="{StaticResource ButtonTextBrush}"
                         BorderThickness="0"
-                        FontSize="13">
+                        FontSize="13"
+                        Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="{StaticResource ButtonSaveBrush}"/>
@@ -194,13 +298,14 @@
         </StackPanel>
 
         <Button Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
-        x:Name="ButtonSettings"
-        Content="⚙️ Settings"
-        Height="35" Width="130"
-        Margin="0,0,0,10"
-        Foreground="{StaticResource ButtonTextBrush}"
-        BorderThickness="0" FontSize="13"
-        Click="ButtonSettings_Click">
+                x:Name="ButtonSettings"
+                Content="⚙️ Settings"
+                Height="35" Width="130"
+                Margin="0,0,0,10"
+                Foreground="{StaticResource ButtonTextBrush}"
+                BorderThickness="0" FontSize="13"
+                Click="ButtonSettings_Click"
+                Cursor="Hand">
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Background" Value="{StaticResource ButtonInfoBrush}"/>

@@ -32,8 +32,8 @@ public static Dictionary<string, int> GetAllTimeStats()
         var allFiles = Directory.GetFiles(BasePath);
         AppLogger.Log($"[Parser] ВСЕГО файлов в папке: {allFiles.Length}");
 
-        foreach (var f in allFiles)
-            AppLogger.Log($"[Parser] FILE: '{Path.GetFileName(f)}'");
+        //foreach (var f in allFiles)
+        //    AppLogger.Log($"[Parser] FILE: '{Path.GetFileName(f)}'");
 
         var logFiles = Directory.GetFiles(BasePath, "*.log");
         AppLogger.Log($"[Parser] Файлов *.log: {logFiles.Length}");
@@ -50,7 +50,7 @@ public static Dictionary<string, int> GetAllTimeStats()
             }
 
             var entries = ParseLogFile(file, fileDate.Value);
-            AppLogger.Log($"[Parser] ✅ Файл: {fileName}, записей: {entries.Count}");
+            //AppLogger.Log($"[Parser] ✅ Файл: {fileName}, записей: {entries.Count}");
 
             foreach (var entry in entries)
             {

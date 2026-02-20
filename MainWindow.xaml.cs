@@ -16,7 +16,7 @@ namespace AppsTime
 {
     public partial class MainWindow : Window
     {
-        public ObservableCollection<ProcessStat> AllTimeStats { get; }
+        public ObservableCollection<ProcessStat> AllTimeStats { get; set; }
             = new ObservableCollection<ProcessStat>();
 
         private System.Timers.Timer _refreshTimer;
@@ -36,12 +36,27 @@ namespace AppsTime
             CustomColorsManager.ApplyToResources(_customColors);
 
             _customData = CustomDataManager.Load();
+
+            // 👇 Устанавливаем глобальный формат времени
+            ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
+
             LoadAllTimeStats();
-
-            // Запускаем таймер
             InitializeRefreshTimer();
-
             UpdateMainWindowBackground();
+        }
+        public void RefreshTimeFormat()
+        {
+            ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
+
+            // Обновляем коллекцию (триггерим PropertyChanged)
+            var items = AllTimeStats.ToList();
+            AllTimeStats.Clear();
+            foreach (var item in items)
+            {
+                AllTimeStats.Add(item);
+            }
+
+            AppLogger.Log($"[Settings] Формат времени обновлён: {ProcessStat.GlobalTimeFormat}");
         }
         private void InitializeRefreshTimer()
         {
@@ -107,66 +122,73 @@ namespace AppsTime
         {
             try
             {
-                // 👇 Сохраняем текущее выделение
                 var selectedItem = ListBoxAllTime.SelectedItem as ProcessStat;
-                string selectedProcessName = selectedItem?.ProcessName;
+                string selectedOriginalKey = selectedItem?.OriginalKey;
 
-                AppLogger.Log($"[UI] Сохранено выделение: {selectedProcessName}");
-
-                // Временно отключаем события
                 ListBoxAllTime.SelectionChanged -= ListBoxAllTime_SelectionChanged;
 
-                // Очищаем и загружаем заново
-                AllTimeStats.Clear();
+                var newStats = new ObservableCollection<ProcessStat>();
                 var stats = DataParser.GetAllTimeStats();
 
                 ProcessStat restoredItem = null;
 
                 foreach (var kvp in stats.OrderByDescending(x => x.Value))
                 {
+                    
                     if (_customData.ExcludedProcesses.Contains(kvp.Key))
                     {
                         continue;
                     }
 
+                    // 👇 Фактическое время из лога
+                    int actualTime = kvp.Value;
+
+                    // 👇 Получаем дельту по ОРИГИНАЛЬНОМУ ключу
+                    int delta = _customData.TimeOverrides.TryGetValue(kvp.Key, out var d) ? d : 0;
+
+                    // 👇 Отображаемое время = фактическое + дельта
+                    int displayTime = actualTime + delta;
+
                     var processStat = new ProcessStat
                     {
-                        ProcessName = kvp.Key,
-                        TotalSeconds = kvp.Value
+                        OriginalKey = kvp.Key,        // 👇 Сохраняем оригинальный ключ!
+                        ProcessName = kvp.Key,        // Временно оригинальное имя
+                        TotalSeconds = displayTime
                     };
 
+                    // Применяем алиас для отображения
                     if (_customData.NameAliases.TryGetValue(kvp.Key, out var alias))
                     {
                         processStat.ProcessName = alias;
                     }
 
-                    if (_customData.TimeOverrides.TryGetValue(kvp.Key, out var overrideTime))
-                    {
-                        processStat.TotalSeconds = overrideTime;
-                    }
+                    newStats.Add(processStat);
 
-                    AllTimeStats.Add(processStat);
-
-                    // 👇 Ищем элемент для восстановления выделения
-                    if (selectedProcessName != null &&
-                        (processStat.ProcessName == selectedProcessName ||
-                         kvp.Key == selectedProcessName))
+                    // Восстанавливаем выделение по оригинальному ключу
+                    if (selectedOriginalKey != null && processStat.OriginalKey == selectedOriginalKey)
                     {
                         restoredItem = processStat;
                     }
+                    AppLogger.Log($"[Debug] {kvp.Key} | Лог: {kvp.Value}s | Дельта: {delta}s | Отображение: {displayTime}s");
                 }
 
-                _collectionView?.Refresh();
+                AllTimeStats = newStats;
+                DataContext = null;
+                DataContext = this;
 
-                // 👇 Восстанавливаем выделение
+                ListBoxAllTime.ItemsSource = AllTimeStats;
+
+                _collectionView = CollectionViewSource.GetDefaultView(AllTimeStats);
+                _collectionView.Refresh();
+
                 if (restoredItem != null)
                 {
                     ListBoxAllTime.SelectedItem = restoredItem;
-                    AppLogger.Log($"[UI] Восстановлено выделение: {restoredItem.ProcessName}");
                 }
 
-                // Возвращаем обработчик
                 ListBoxAllTime.SelectionChanged += ListBoxAllTime_SelectionChanged;
+
+                AppLogger.Log($"[UI] Список обновлён ({newStats.Count} процессов)");
             }
             catch (Exception ex)
             {
@@ -216,80 +238,54 @@ namespace AppsTime
                 return;
             }
 
-            // Находим оригинальное имя
-            string originalName = _selectedItem.ProcessName;
-            foreach (var alias in _customData.NameAliases)
+            // 👇 Используем OriginalKey (оригинальное имя из лога)
+            string originalKey = _selectedItem.OriginalKey;
+
+            // Если OriginalKey не установлен, пытаемся найти через алиасы
+            if (string.IsNullOrEmpty(originalKey))
             {
-                if (alias.Value == _selectedItem.ProcessName)
+                originalKey = _selectedItem.ProcessName;
+                foreach (var alias in _customData.NameAliases)
                 {
-                    originalName = alias.Key;
-                    break;
+                    if (alias.Value == _selectedItem.ProcessName)
+                    {
+                        originalKey = alias.Key;
+                        break;
+                    }
                 }
             }
 
-            // Проверяем дубликаты
-            var existingProcess = AllTimeStats.FirstOrDefault(x =>
-                x.ProcessName.Equals(newName, StringComparison.OrdinalIgnoreCase) &&
-                x != _selectedItem);
-
-            if (existingProcess != null)
+            // Парсим введённое время
+            int userInputTime = 0;
+            if (int.TryParse(TextBoxTimeSeconds.Text, out int parsedTime))
             {
-                var result = MessageBox.Show(
-                    $"Процесс \"{newName}\" уже существует!\n\nОбъединить время?",
-                    "Дубликат процесса",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    existingProcess.TotalSeconds += _selectedItem.TotalSeconds;
-
-                    _customData.TimeOverrides[originalName] = existingProcess.TotalSeconds;
-                    if (_customData.NameAliases.ContainsKey(originalName))
-                        _customData.NameAliases.Remove(originalName);
-
-                    AllTimeStats.Remove(_selectedItem);
-                    _collectionView?.Refresh();
-
-                    // 👇 Автосохранение
-                    CustomDataManager.Save(_customData);
-
-                    AppLogger.Log($"[UI] Объединено и сохранено");
-                    MessageBox.Show($"Процессы объединены!", "Успешно",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-                else
-                {
-                    return;
-                }
+                userInputTime = Math.Max(0, parsedTime);
             }
 
-            if (int.TryParse(TextBoxTimeSeconds.Text, out int newTime))
+            // 👇 Получаем ФАКТИЧЕСКОЕ время из лога (не из UI!)
+            var stats = DataParser.GetAllTimeStats();
+            int actualTimeFromLog = stats.TryGetValue(originalKey, out var t) ? t : 0;
+
+            // 👇 Вычисляем дельту: введённое - фактическое
+            int delta = userInputTime - actualTimeFromLog;
+
+            // Сохраняем алиас (если изменили имя)
+            if (newName != _selectedItem.ProcessName)
             {
-                if (newName != _selectedItem.ProcessName)
-                {
-                    _customData.NameAliases[originalName] = newName;
-                }
-
-                _customData.TimeOverrides[originalName] = newTime;
-
-                _selectedItem.ProcessName = newName;
-                _selectedItem.TotalSeconds = newTime;
-                _collectionView?.Refresh();
-
-                // 👇 Автосохранение
-                CustomDataManager.Save(_customData);
-
-                AppLogger.Log($"[UI] Сохранено: {newName} = {newTime}s");
-                MessageBox.Show($"Данные обновлены!\n\nИмя: {newName}\nВремя: {newTime} секунд ({_selectedItem.TimeFormatted})",
-                    "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                _customData.NameAliases[originalKey] = newName;
             }
-            else
-            {
-                MessageBox.Show("Неверный формат времени!", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+
+            // 👇 Сохраняем ДЕЛЬТУ по оригинальному ключу
+            _customData.TimeOverrides[originalKey] = delta;
+
+            // Автосохранение
+            CustomDataManager.Save(_customData);
+
+            // 👇 МГНОВЕННОЕ обновление списка
+            Dispatcher.Invoke(() => LoadAllTimeStats(),
+                System.Windows.Threading.DispatcherPriority.Render);
+
+            AppLogger.Log($"[UI] Сохранено: {newName} | Ключ: {originalKey} | Фактическое: {actualTimeFromLog}s | Введённое: {userInputTime}s | Дельта: {delta}s");
         }
 
         private void ButtonExclude_Click(object sender, RoutedEventArgs e)
@@ -309,29 +305,37 @@ namespace AppsTime
 
             if (result == MessageBoxResult.Yes)
             {
-                string originalName = _selectedItem.ProcessName;
-                foreach (var alias in _customData.NameAliases)
+                // 👇 Используем OriginalKey
+                string originalKey = _selectedItem.OriginalKey;
+
+                if (string.IsNullOrEmpty(originalKey))
                 {
-                    if (alias.Value == _selectedItem.ProcessName)
+                    originalKey = _selectedItem.ProcessName;
+                    foreach (var alias in _customData.NameAliases)
                     {
-                        originalName = alias.Key;
-                        break;
+                        if (alias.Value == _selectedItem.ProcessName)
+                        {
+                            originalKey = alias.Key;
+                            break;
+                        }
                     }
                 }
 
-                _customData.ExcludedProcesses.Add(originalName);
-
+                _customData.ExcludedProcesses.Add(originalKey);
                 AllTimeStats.Remove(_selectedItem);
+
                 ListBoxAllTime.SelectedItem = null;
                 TextBoxProcessName.Text = "";
                 TextBoxTimeSeconds.Text = "";
                 TextBlockTimeFormatted.Text = "";
                 _selectedItem = null;
 
-                // 👇 Автосохранение
                 CustomDataManager.Save(_customData);
 
-                AppLogger.Log($"[UI] Исключён и сохранён: {originalName}");
+                AppLogger.Log($"[UI] Исключён и сохранён: {originalKey}");
+
+                Dispatcher.Invoke(() => LoadAllTimeStats(),
+                    System.Windows.Threading.DispatcherPriority.Render);
             }
         }
         private void ButtonExcludedApps_Click(object sender, RoutedEventArgs e)
@@ -356,6 +360,103 @@ namespace AppsTime
 
             LoadAllTimeStats();
         }
+        #region Context Menu
 
+        private void MenuExclude_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            // 👇 Вызываем существующий метод
+            ButtonExclude_Click(sender, e);
+        }
+
+        private void MenuCombine_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            MessageBox.Show($"Объединить \"{_selectedItem.ProcessName}\" с...\n\n(Функционал в разработке)",
+                "Объединить", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MenuSetTag_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            MessageBox.Show($"Установить тег для \"{_selectedItem.ProcessName}\"\n\n(Функционал в разработке)",
+                "Тег", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MenuRename_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            // 👇 Открываем поля для редактирования
+            TextBoxProcessName.Text = _selectedItem.ProcessName;
+            TextBoxTimeSeconds.Text = _selectedItem.TotalSeconds.ToString();
+            TextBoxProcessName.Focus();
+        }
+
+        private void MenuResetTime_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            var result = MessageBox.Show(
+                $"Сбросить время для \"{_selectedItem.ProcessName}\"?\n\n" +
+                $"Это удалит переопределение времени из настроек.",
+                "Сброс времени",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                // Удаляем переопределение
+                string originalKey = _selectedItem.OriginalKey ?? _selectedItem.ProcessName;
+                _customData.TimeOverrides.Remove(originalKey);
+                CustomDataManager.Save(_customData);
+
+                // Обновляем список
+                LoadAllTimeStats();
+
+                AppLogger.Log($"[Menu] Сброшено время: {originalKey}");
+            }
+        }
+
+        private async void MenuCopyName_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            // 👇 Асинхронная запись с await
+            bool success = await ClipboardHelper.SetTextAsync(_selectedItem.ProcessName);
+
+            if (success)
+            {
+                AppLogger.Log($"[Menu] Скопировано имя: {_selectedItem.ProcessName}");
+            }
+            else
+            {
+                MessageBox.Show("Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void MenuCopyTime_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null) return;
+
+            // 👇 Асинхронная запись с await
+            bool success = await ClipboardHelper.SetTextAsync(_selectedItem.TimeFormatted);
+
+            if (success)
+            {
+                AppLogger.Log($"[Menu] Скопировано время: {_selectedItem.TimeFormatted}");
+            }
+            else
+            {
+                MessageBox.Show("Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        #endregion
     }
 }

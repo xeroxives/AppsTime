@@ -6,6 +6,7 @@ namespace AppsTime.Models
     public class CustomData
     {
         public string Version { get; set; } = "1.0";
+        public string TimeFormat { get; set; } = "hh_mm_ss";
         public DateTime LastModified { get; set; } = DateTime.Now;
 
         // 👇 Изменения: оригинальное имя → новое имя

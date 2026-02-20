@@ -31,6 +31,112 @@
         <TabControl Grid.Row="1" Margin="20,10,20,10"
                     Background="{StaticResource PanelBackgroundBrush}"
                     Foreground="{StaticResource TextPrimaryBrush}">
+            <TabItem Header="⚙️ Общие">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Формат времени -->
+                    <GroupBox Grid.Row="0" 
+                      Header="Формат отображения времени" 
+                      Foreground="{StaticResource TextPrimaryBrush}"
+                      Margin="0,0,0,10">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" 
+                               Text="Формат времени:" 
+                               VerticalAlignment="Center" 
+                               Margin="0,5"/>
+                            <ComboBox x:Name="ComboBoxTimeFormat" 
+                                      Grid.Row="0" Grid.Column="1"
+                                      Height="30" Margin="5,5,10,5"
+                                      Background="{DynamicResource ButtonExcludeBrush}"
+                                      BorderBrush="{StaticResource TextBoxBorderBrush}"
+                                      SelectionChanged="ComboBoxTimeFormat_SelectionChanged" Foreground="Black">
+
+                                <ComboBox.Resources>
+                                    <Style TargetType="ComboBoxItem">
+                                        <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
+                                        <Setter Property="Padding" Value="5,3"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ComboBoxItem">
+                                                    <Border x:Name="Border"
+                                                            Background="{TemplateBinding Background}"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <!-- 👇 Используем более тёмный цвет для выделенного элемента -->
+                                                            <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
+                                                            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ComboBox.Resources>
+
+                                <ComboBoxItem Content="124 часов (целые часы)" Tag="hours_int"/>
+                                <ComboBoxItem Content="123.5 часов (дробные часы)" Tag="hours_float"/>
+                                <ComboBoxItem Content="123:30 (часы:минуты)" Tag="hh_mm"/>
+                                <ComboBoxItem Content="123:30:00 (часы:мин:сек)" Tag="hh_mm_ss"/>
+                                <ComboBoxItem Content="5:03:30 (дни:часы:мин)" Tag="dd_hh_mm"/>
+                                <ComboBoxItem Content="5:03:30:00 (дни:часы:мин:сек)" Tag="dd_hh_mm_ss"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" 
+                               Text="Пример:" 
+                               VerticalAlignment="Center" 
+                               Margin="0,5"/>
+                            <TextBlock x:Name="TextBlockTimePreview" 
+                               Grid.Row="1" Grid.Column="1"
+                               Text="123:30:00" 
+                               VerticalAlignment="Center" 
+                               Margin="5,5,10,5"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="14"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Кнопки -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button x:Name="ButtonResetSettings" 
+                                Content="🔄 Сбросить"
+                                Width="120" Height="35" Margin="0,0,10,0"
+                                Background="{StaticResource ButtonDefaultBrush}"
+                                Foreground="{StaticResource ButtonTextBrush}"
+                                BorderThickness="0"
+                                Click="ButtonResetSettings_Click"
+                                Cursor="Hand"/>
+                        <Button x:Name="ButtonApplySettings" 
+                                Content="💾 Применить"
+                                Width="130" Height="35"
+                                Background="{StaticResource ButtonSaveBrush}"
+                                Foreground="{StaticResource ButtonTextBrush}"
+                                BorderThickness="0"
+                                Click="ButtonApplySettings_Click"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
 
             <!-- Вкладка 1: Цвета -->
             <TabItem Header="🎨 Цвета">
@@ -40,7 +146,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Hidden">
                         <StackPanel Margin="5">
 
                             <!-- Основные цвета -->
@@ -148,7 +254,6 @@
                             </GroupBox>
 
                             <!-- Цвета текста -->
-                            <!-- Цвета текста -->
                             <GroupBox Header="Цвета текста" 
           Foreground="{StaticResource TextPrimaryBrush}"
           Margin="0,0,0,10">
@@ -208,19 +313,21 @@
                     <!-- Кнопки -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button x:Name="ButtonResetColors" 
-                    Content="🔄 Сбросить"
-                    Width="120" Height="35" Margin="0,0,10,0"
-                    Background="{StaticResource ButtonDefaultBrush}"
-                    Foreground="{StaticResource ButtonTextBrush}"
-                    BorderThickness="0"
-                    Click="ButtonResetColors_Click"/>
+                                Content="🔄 Сбросить"
+                                Width="120" Height="35" Margin="0,0,10,0"
+                                Background="{StaticResource ButtonDefaultBrush}"
+                                Foreground="{StaticResource ButtonTextBrush}"
+                                BorderThickness="0"
+                                Click="ButtonResetColors_Click"
+                                Cursor="Hand"/>
                         <Button x:Name="ButtonApplyColors" 
-                    Content="💾 Применить"
-                    Width="130" Height="35"
-                    Background="{StaticResource ButtonSaveBrush}"
-                    Foreground="{StaticResource ButtonTextBrush}"
-                    BorderThickness="0"
-                    Click="ButtonApplyColors_Click"/>
+                                Content="💾 Применить"
+                                Width="130" Height="35"
+                                Background="{StaticResource ButtonSaveBrush}"
+                                Foreground="{StaticResource ButtonTextBrush}"
+                                BorderThickness="0"
+                                Click="ButtonApplyColors_Click"
+                                Cursor="Hand"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -263,14 +370,60 @@
                                 Foreground="{StaticResource ButtonTextBrush}"
                                 BorderThickness="0"
                                 IsEnabled="False"
-                                Click="ButtonRestore_Click"/>
+                                Click="ButtonRestore_Click">
+
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <!-- Цвета по умолчанию (активная кнопка) -->
+                                    <Setter Property="Background" Value="{StaticResource ButtonSaveBrush}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource ButtonTextBrush}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Border"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="3">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                      VerticalAlignment="Center"
+                                                                      Margin="10,5"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <!-- Наведение мыши -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSaveHoverBrush}"/>
+                                                    </Trigger>
+
+                                                    <!-- Нажатие -->
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSavePressedBrush}"/>
+                                                    </Trigger>
+
+                                                    <!-- 👇 НЕАКТИВНОЕ СОСТОЯНИЕ -->
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="Border" Property="Background" Value="#FF505050"/>
+                                                        <Setter Property="Foreground" Value="#FF888888"/>
+                                                        <Setter Property="Cursor" Value="Arrow"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button x:Name="ButtonClearAll" 
                                 Content="Очистить все" 
                                 Width="110" Height="35" Margin="0,0,10,0"
                                 Background="{StaticResource ButtonExcludeBrush}"
                                 Foreground="{StaticResource ButtonTextBrush}"
                                 BorderThickness="0"
-                                Click="ButtonClearAll_Click"/>
+                                Click="ButtonClearAll_Click"
+                                Cursor="Hand"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -284,7 +437,8 @@
                     Background="{StaticResource ButtonDefaultBrush}"
                     Foreground="{StaticResource ButtonTextBrush}"
                     BorderThickness="0"
-                    Click="ButtonClose_Click"/>
+                    Click="ButtonClose_Click"
+                    Cursor="Hand"/>
         </StackPanel>
     </Grid>
 </Window>

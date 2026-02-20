@@ -5,7 +5,6 @@ namespace AppsTime.Helpers
 {
     public static class AppLogger
     {
-        // 👇 ГЛАВНЫЙ ПЕРЕКЛЮЧАТЕЛЬ: поставьте false, чтобы отключить все логи
         public static bool DEBUG = false;
 
         [Conditional("DEBUG")]
