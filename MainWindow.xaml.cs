@@ -40,10 +40,114 @@ namespace AppsTime
             // 👇 Устанавливаем глобальный формат времени
             ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
 
+            // 👇 Применяем сохранённый язык
+            ApplySavedLanguage();
+
             LoadAllTimeStats();
             InitializeRefreshTimer();
             UpdateMainWindowBackground();
         }
+
+        // 👇 Применяем сохранённый язык при запуске
+        private void ApplySavedLanguage()
+        {
+            string lang = _customData.Language ?? "ru";
+            AppLogger.Log($"[Lang] Загружен язык: {lang}");
+
+            // Применяем локализацию ко всему UI
+            ApplyLocalization();
+        }
+
+        // 👇 Обновляем UI при смене языка
+        public void ApplyLocalization()
+        {
+            string lang = _customData.Language ?? "ru";
+            AppLogger.Log($"[Lang] Применён язык: {lang}");
+
+            // Обновляем заголовок окна
+            Title = (lang == "en") ? "AppsTime" : "AppsTime";
+
+            // Обновляем основные элементы UI
+            UpdateMainLabels(lang);
+
+            // Обновляем контекстное меню
+            UpdateContextMenu();
+
+            // Обновляем правую панель (метки и кнопки)
+            UpdateRightPanel(lang);
+
+            // Принудительно обновляем ListBox для перерисовки времени
+            _collectionView?.Refresh();
+        }
+
+        // 👇 Обновляет основные метки в главном окне
+        private void UpdateMainLabels(string lang)
+        {
+            // Заголовок списка
+            var label = FindName("LabelAllTime") as Label;
+            if (label != null)
+            {
+                label.Content = (lang == "en") ? "All Time:" : "Всё время:";
+            }
+        }
+
+        // 👇 Обновляет правую панель (метки и кнопки)
+        private void UpdateRightPanel(string lang)
+        {
+            // Метки
+            var lblName = FindName("LabelName") as Label;
+            var lblTime = FindName("LabelTime") as Label;
+            var lblFormatted = FindName("LabelFormatted") as Label;
+
+            if (lblName != null) lblName.Content = (lang == "en") ? "Name:" : "Имя:";
+            if (lblTime != null) lblTime.Content = (lang == "en") ? "Time (seconds):" : "Время (секунды):";
+            if (lblFormatted != null) lblFormatted.Content = (lang == "en") ? "Formatted:" : "Форматировано:";
+
+            // Кнопки
+            var btnExclude = FindName("ButtonExclude") as Button;
+            var btnSave = FindName("ButtonSave") as Button;
+            var btnSettings = FindName("ButtonSettings") as Button;
+
+            if (btnExclude != null) btnExclude.Content = (lang == "en") ? "Exclude" : "Исключить";
+            if (btnSave != null) btnSave.Content = (lang == "en") ? "Save" : "Сохранить";
+            if (btnSettings != null) btnSettings.Content = (lang == "en") ? "⚙️ Settings" : "⚙️ Настройки";
+        }
+
+        // 👇 Обновляет текст пунктов контекстного меню
+        private void UpdateContextMenu()
+        {
+            string lang = _customData.Language ?? "ru";
+
+            if (ListBoxContextMenu != null)
+            {
+                UpdateMenuItem(MenuExclude, "🚫 Исключить", "🚫 Exclude");
+                UpdateMenuItem(MenuCombine, "🔗 Объединить", "🔗 Combine");
+                UpdateMenuItem(MenuSetTag, "🏷️ Установить тег", "🏷️ Set tag");
+                UpdateMenuItem(MenuResetTime, "🔄 Сбросить время", "🔄 Reset time");
+                UpdateMenuItem(MenuCopyName, "📋 Копировать имя", "📋 Copy name");
+                UpdateMenuItem(MenuCopyTime, "📋 Копировать время", "📋 Copy time");
+            }
+        }
+
+        private void UpdateMenuItem(MenuItem item, string ruText, string enText)
+        {
+            if (item != null)
+            {
+                string lang = _customData.Language ?? "ru";
+                item.Header = (lang == "en") ? enText : ruText;
+            }
+        }
+
+        // 👇 Helper для локализации MessageBox
+        private void ShowLocalizedMessageBox(string msgRu, string msgEn, string titleRu, string titleEn,
+            MessageBoxButton buttons, MessageBoxImage icon)
+        {
+            string lang = _customData.Language ?? "ru";
+            string msg = (lang == "en") ? msgEn : msgRu;
+            string title = (lang == "en") ? titleEn : titleRu;
+            MessageBox.Show(msg, title, buttons, icon);
+        }
+
         public void RefreshTimeFormat()
         {
             ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
@@ -58,6 +162,7 @@ namespace AppsTime
 
             AppLogger.Log($"[Settings] Формат времени обновлён: {ProcessStat.GlobalTimeFormat}");
         }
+
         private void InitializeRefreshTimer()
         {
             _refreshTimer = new System.Timers.Timer(RefreshIntervalMs);
@@ -67,6 +172,7 @@ namespace AppsTime
 
             AppLogger.Log($"[Timer] Запущен таймер обновления ({RefreshIntervalMs}мс)");
         }
+
         private async void OnRefreshTimerElapsed(object sender, ElapsedEventArgs e)
         {
             // Обновляем UI через Dispatcher (требуется для WPF)
@@ -76,6 +182,7 @@ namespace AppsTime
                 UpdateMainWindowBackground();
             });
         }
+
         private void RefreshProcessList()
         {
             var stats = DataParser.GetAllTimeStats();
@@ -94,6 +201,7 @@ namespace AppsTime
             // Простая хеш-сумма для проверки изменений
             return string.Join(",", stats.Select(x => $"{x.Key}:{x.Value}").OrderBy(x => x));
         }
+
         public void UpdateMainWindowBackground()
         {
             try
@@ -118,6 +226,7 @@ namespace AppsTime
                 AppLogger.LogError($"[MainWindow] Ошибка обновления фона: {ex.Message}");
             }
         }
+
         private void LoadAllTimeStats()
         {
             try
@@ -134,7 +243,6 @@ namespace AppsTime
 
                 foreach (var kvp in stats.OrderByDescending(x => x.Value))
                 {
-                    
                     if (_customData.ExcludedProcesses.Contains(kvp.Key))
                     {
                         continue;
@@ -151,8 +259,8 @@ namespace AppsTime
 
                     var processStat = new ProcessStat
                     {
-                        OriginalKey = kvp.Key,        // 👇 Сохраняем оригинальный ключ!
-                        ProcessName = kvp.Key,        // Временно оригинальное имя
+                        OriginalKey = kvp.Key,
+                        ProcessName = kvp.Key,
                         TotalSeconds = displayTime
                     };
 
@@ -195,6 +303,7 @@ namespace AppsTime
                 AppLogger.LogError($"[UI] Ошибка загрузки статистики: {ex.Message}");
             }
         }
+
         protected override void OnClosed(EventArgs e)
         {
             _refreshTimer?.Stop();
@@ -202,6 +311,7 @@ namespace AppsTime
             AppLogger.Log("[Timer] Таймер остановлен");
             base.OnClosed(e);
         }
+
         private void ListBoxAllTime_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ListBoxAllTime.SelectedItem is ProcessStat selected)
@@ -224,7 +334,9 @@ namespace AppsTime
         {
             if (_selectedItem == null)
             {
-                MessageBox.Show("Выберите процесс для редактирования!", "Внимание",
+                ShowLocalizedMessageBox(
+                    "Выберите процесс для редактирования!", "Select a process!",
+                    "Внимание", "Warning",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -233,7 +345,9 @@ namespace AppsTime
 
             if (string.IsNullOrWhiteSpace(newName))
             {
-                MessageBox.Show("Имя процесса не может быть пустым!", "Ошибка",
+                ShowLocalizedMessageBox(
+                    "Имя процесса не может быть пустым!", "Process name cannot be empty!",
+                    "Ошибка", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -292,16 +406,20 @@ namespace AppsTime
         {
             if (_selectedItem == null)
             {
-                MessageBox.Show("Выберите процесс для исключения!", "Внимание",
+                ShowLocalizedMessageBox(
+                    "Выберите процесс для исключения!", "Select a process!",
+                    "Внимание", "Warning",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var result = MessageBox.Show(
-                $"Исключить процесс \"{_selectedItem.ProcessName}\"?",
-                "Подтверждение",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            string lang = _customData.Language ?? "ru";
+            string msg = (lang == "en")
+                ? $"Exclude process \"{_selectedItem.ProcessName}\"?"
+                : $"Исключить процесс \"{_selectedItem.ProcessName}\"?";
+            string title = (lang == "en") ? "Confirm" : "Подтверждение";
+
+            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -338,14 +456,19 @@ namespace AppsTime
                     System.Windows.Threading.DispatcherPriority.Render);
             }
         }
+
         private void ButtonExcludedApps_Click(object sender, RoutedEventArgs e)
         {
             var excludedWindow = new ExcludedAppsWindow(this, _customData);
             excludedWindow.ShowDialog();
             LoadAllTimeStats();
         }
+
         private void ButtonSettings_Click(object sender, RoutedEventArgs e)
         {
+            // 👇 Сохраняем текущий язык для сравнения
+            string oldLanguage = _customData.Language ?? "ru";
+
             var settingsWindow = new SettingsWindow(this, _customData, _customColors);
             settingsWindow.ShowDialog();
 
@@ -355,68 +478,69 @@ namespace AppsTime
                 _customColors = settingsWindow.UpdatedColors;
             }
 
+            // 👇 Если язык изменился — применяем локализацию
+            string newLanguage = _customData.Language ?? "ru";
+            if (newLanguage != oldLanguage)
+            {
+                ApplyLocalization();
+            }
+
             // Обновляем фон главного окна
             UpdateMainWindowBackground();
 
             LoadAllTimeStats();
         }
+
         #region Context Menu
 
         private void MenuExclude_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
-
-            // 👇 Вызываем существующий метод
             ButtonExclude_Click(sender, e);
         }
 
         private void MenuCombine_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
+            string lang = _customData.Language ?? "ru";
+            string msg = (lang == "en")
+                ? $"Combine \"{_selectedItem.ProcessName}\" with...\n\n(Feature in development)"
+                : $"Объединить \"{_selectedItem.ProcessName}\" с...\n\n(Функционал в разработке)";
+            string title = (lang == "en") ? "Combine" : "Объединить";
 
-            MessageBox.Show($"Объединить \"{_selectedItem.ProcessName}\" с...\n\n(Функционал в разработке)",
-                "Объединить", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuSetTag_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
+            string lang = _customData.Language ?? "ru";
+            string msg = (lang == "en")
+                ? $"Set tag for \"{_selectedItem.ProcessName}\"\n\n(Feature in development)"
+                : $"Установить тег для \"{_selectedItem.ProcessName}\"\n\n(Функционал в разработке)";
+            string title = (lang == "en") ? "Tag" : "Тег";
 
-            MessageBox.Show($"Установить тег для \"{_selectedItem.ProcessName}\"\n\n(Функционал в разработке)",
-                "Тег", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void MenuRename_Click(object sender, RoutedEventArgs e)
-        {
-            if (_selectedItem == null) return;
-
-            // 👇 Открываем поля для редактирования
-            TextBoxProcessName.Text = _selectedItem.ProcessName;
-            TextBoxTimeSeconds.Text = _selectedItem.TotalSeconds.ToString();
-            TextBoxProcessName.Focus();
+            MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuResetTime_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
 
-            var result = MessageBox.Show(
-                $"Сбросить время для \"{_selectedItem.ProcessName}\"?\n\n" +
-                $"Это удалит переопределение времени из настроек.",
-                "Сброс времени",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            string lang = _customData.Language ?? "ru";
+            string msg = (lang == "en")
+                ? $"Reset time for \"{_selectedItem.ProcessName}\"?\n\nThis will remove the time override from settings."
+                : $"Сбросить время для \"{_selectedItem.ProcessName}\"?\n\nЭто удалит переопределение времени из настроек.";
+            string title = (lang == "en") ? "Reset time" : "Сброс времени";
+
+            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
-                // Удаляем переопределение
                 string originalKey = _selectedItem.OriginalKey ?? _selectedItem.ProcessName;
                 _customData.TimeOverrides.Remove(originalKey);
                 CustomDataManager.Save(_customData);
-
-                // Обновляем список
                 LoadAllTimeStats();
-
                 AppLogger.Log($"[Menu] Сброшено время: {originalKey}");
             }
         }
@@ -425,7 +549,6 @@ namespace AppsTime
         {
             if (_selectedItem == null) return;
 
-            // 👇 Асинхронная запись с await
             bool success = await ClipboardHelper.SetTextAsync(_selectedItem.ProcessName);
 
             if (success)
@@ -434,8 +557,11 @@ namespace AppsTime
             }
             else
             {
-                MessageBox.Show("Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowLocalizedMessageBox(
+                    "Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
+                    "Failed to copy to clipboard.\n\nMaybe clipboard is busy.\n\nTry again.",
+                    "Ошибка", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -443,7 +569,6 @@ namespace AppsTime
         {
             if (_selectedItem == null) return;
 
-            // 👇 Асинхронная запись с await
             bool success = await ClipboardHelper.SetTextAsync(_selectedItem.TimeFormatted);
 
             if (success)
@@ -452,8 +577,11 @@ namespace AppsTime
             }
             else
             {
-                MessageBox.Show("Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowLocalizedMessageBox(
+                    "Не удалось скопировать в буфер обмена.\n\nВозможно, буфер занят другим приложением.\n\nПопробуйте ещё раз.",
+                    "Failed to copy to clipboard.\n\nMaybe clipboard is busy.\n\nTry again.",
+                    "Ошибка", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

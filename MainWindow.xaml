@@ -23,7 +23,8 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
-        <Label Content="All Time List:" 
+        <Label x:Name="LabelAllTime"
+               Content="Всё время:" 
                Foreground="{StaticResource TextPrimaryBrush}" 
                Margin="20,0,0,0" FontWeight="Bold"/>
 
@@ -149,7 +150,6 @@
                 <Style TargetType="ListBoxItem">
                     <Setter Property="Foreground" Value="{StaticResource ListBoxTextBrush}"/>
                     <Setter Property="Background" Value="Transparent"/>
-                    <!--<Setter Property="Padding" Value="0"/>-->
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
@@ -203,7 +203,9 @@
         <StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="20,10,20,10">
 
             <StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
-                <Label Content="Name:" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
+                <Label x:Name="LabelName"
+                       Content="Имя:" VerticalAlignment="Center" 
+                       Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
                 <TextBox x:Name="TextBoxProcessName" 
                          Margin="10,0,10,0" 
                          Width="200" 
@@ -218,7 +220,9 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
-                <Label Content="Time (seconds):" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
+                <Label x:Name="LabelTime"
+                       Content="Время (секунды):" VerticalAlignment="Center" 
+                       Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
                 <TextBox x:Name="TextBoxTimeSeconds" 
                          Margin="10,0,10,0" 
                          Width="200" 
@@ -232,7 +236,9 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Center" Margin="10,0,10,0">
-                <Label Content="Formatted:" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                <Label x:Name="LabelFormatted"
+                       Content="Форматировано:" VerticalAlignment="Center" 
+                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
                 <TextBlock x:Name="TextBlockTimeFormatted" 
                            Margin="10,0,10,0" 
                            VerticalAlignment="Center" 
@@ -246,7 +252,7 @@
                         Width="100" 
                         Height="35" 
                         Margin="10" 
-                        Content="Exclude" 
+                        Content="Исключить" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center"
                         Foreground="{StaticResource ButtonTextBrush}"
@@ -273,7 +279,7 @@
                         Width="100" 
                         Height="35" 
                         Margin="10" 
-                        Content="Save" 
+                        Content="Сохранить" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center"
                         Foreground="{StaticResource ButtonTextBrush}"
@@ -299,7 +305,7 @@
 
         <Button Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
                 x:Name="ButtonSettings"
-                Content="⚙️ Settings"
+                Content="⚙️ Настройки"
                 Height="35" Width="130"
                 Margin="0,0,0,10"
                 Foreground="{StaticResource ButtonTextBrush}"

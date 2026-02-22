@@ -9,6 +9,9 @@ namespace AppsTime.Models
         public string TimeFormat { get; set; } = "hh_mm_ss";
         public DateTime LastModified { get; set; } = DateTime.Now;
 
+        // 👇 Язык интерфейса (НОВОЕ)
+        public string Language { get; set; } = "ru";
+
         // 👇 Изменения: оригинальное имя → новое имя
         public Dictionary<string, string> NameAliases { get; set; } = new Dictionary<string, string>();
 

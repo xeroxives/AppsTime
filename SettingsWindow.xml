@@ -21,7 +21,7 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
-        <Label Grid.Row="0" x:Name="LabelSettingsTitle"
+        <Label Grid.Row="0" 
                Content="Настройки приложения" 
                Foreground="{StaticResource TextPrimaryBrush}"
                FontSize="20" FontWeight="Bold"
@@ -31,78 +31,19 @@
         <TabControl Grid.Row="1" Margin="20,10,20,10"
                     Background="{StaticResource PanelBackgroundBrush}"
                     Foreground="{StaticResource TextPrimaryBrush}">
-
-            <!-- 👇 Вкладка 1: Общие -->
-            <TabItem Header="⚙️ Общие" x:Name="TabGeneral">
+            <TabItem Header="⚙️ Общие">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 👇 Язык интерфейса -->
-                    <GroupBox x:Name="GroupBoxLanguage"
-                              Grid.Row="0"
-                              Header="Язык интерфейса"
-                              Foreground="{StaticResource TextPrimaryBrush}"
-                              Margin="0,0,0,10">
-                        <Grid Margin="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="17"/>
-                                <ColumnDefinition Width="183"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0"
-                                       Text="Язык:"
-                                       VerticalAlignment="Center"
-                                       x:Name="LabelLanguage" Grid.ColumnSpan="2"/>
-                            <ComboBox x:Name="ComboBoxLanguage"
-                                      Grid.Column="2"
-                                      Height="30" Margin="5,5,10,5"
-                                      Background="{StaticResource TextBoxBackgroundBrush}"
-                                      BorderBrush="{StaticResource TextBoxBorderBrush}" Foreground="Black">
-                                <ComboBox.Resources>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
-                                        <Setter Property="Padding" Value="5,3"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ComboBoxItem">
-                                                    <Border x:Name="Border"
-                                                            Background="{TemplateBinding Background}"
-                                                            Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
-                                                            <Setter Property="Foreground" Value="#FFFFFFFF"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ComboBox.Resources>
-                                <ComboBoxItem Content="Русский" Tag="ru"/>
-                                <ComboBoxItem Content="English" Tag="en"/>
-                            </ComboBox>
-                        </Grid>
-                    </GroupBox>
-
                     <!-- Формат времени -->
-                    <GroupBox Grid.Row="1"
-                              x:Name="GroupBoxTimeFormat"
-                              Header="Формат отображения времени" 
-                              Foreground="{StaticResource TextPrimaryBrush}"
-                              Margin="0,0,0,10">
+                    <GroupBox Grid.Row="0" 
+                      Header="Формат отображения времени" 
+                      Foreground="{StaticResource TextPrimaryBrush}"
+                      Margin="0,0,0,10">
                         <Grid Margin="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="200"/>
@@ -114,16 +55,15 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" 
-                               Text="Формат времени:"
-                               x:Name="LabelTimeFormat"
+                               Text="Формат времени:" 
                                VerticalAlignment="Center" 
                                Margin="0,5"/>
                             <ComboBox x:Name="ComboBoxTimeFormat" 
                                       Grid.Row="0" Grid.Column="1"
                                       Height="30" Margin="5,5,10,5"
-                                      Background="{StaticResource TextBoxBackgroundBrush}"
+                                      Background="{DynamicResource ButtonExcludeBrush}"
                                       BorderBrush="{StaticResource TextBoxBorderBrush}"
-                                      SelectionChanged="ComboBoxTimeFormat_SelectionChanged">
+                                      SelectionChanged="ComboBoxTimeFormat_SelectionChanged" Foreground="Black">
 
                                 <ComboBox.Resources>
                                     <Style TargetType="ComboBoxItem">
@@ -143,6 +83,7 @@
                                                             <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
                                                         </Trigger>
                                                         <Trigger Property="IsSelected" Value="True">
+                                                            <!-- 👇 Используем более тёмный цвет для выделенного элемента -->
                                                             <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
                                                             <Setter Property="Foreground" Value="#FFFFFFFF"/>
                                                         </Trigger>
@@ -153,17 +94,16 @@
                                     </Style>
                                 </ComboBox.Resources>
 
-                                <ComboBoxItem Content="124 часов (целые часы)" Tag="hours_int" x:Name="int_timeformat"/>
-                                <ComboBoxItem Content="123.5 часов (дробные часы)" Tag="hours_float" x:Name="float_timeformat"/>
-                                <ComboBoxItem Content="123:30 (часы:минуты)" Tag="hh_mm" x:Name="h_m_timeformat"/>
-                                <ComboBoxItem Content="123:30:00 (часы:мин:сек)" Tag="hh_mm_ss" x:Name="h_m_s_timeformat"/>
-                                <ComboBoxItem Content="5:03:30 (дни:часы:мин)" Tag="dd_hh_mm" x:Name="d_h_m_timeformat"/>
-                                <ComboBoxItem Content="5:03:30:00 (дни:часы:мин:сек)" Tag="dd_hh_mm_ss" x:Name="d_h_m_s_timeformat"/>
+                                <ComboBoxItem Content="124 часов (целые часы)" Tag="hours_int"/>
+                                <ComboBoxItem Content="123.5 часов (дробные часы)" Tag="hours_float"/>
+                                <ComboBoxItem Content="123:30 (часы:минуты)" Tag="hh_mm"/>
+                                <ComboBoxItem Content="123:30:00 (часы:мин:сек)" Tag="hh_mm_ss"/>
+                                <ComboBoxItem Content="5:03:30 (дни:часы:мин)" Tag="dd_hh_mm"/>
+                                <ComboBoxItem Content="5:03:30:00 (дни:часы:мин:сек)" Tag="dd_hh_mm_ss"/>
                             </ComboBox>
 
                             <TextBlock Grid.Row="1" Grid.Column="0" 
-                               Text="Пример:"
-                               x:Name="LabelExample"
+                               Text="Пример:" 
                                VerticalAlignment="Center" 
                                Margin="0,5"/>
                             <TextBlock x:Name="TextBlockTimePreview" 
@@ -177,7 +117,7 @@
                     </GroupBox>
 
                     <!-- Кнопки -->
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button x:Name="ButtonResetSettings" 
                                 Content="🔄 Сбросить"
                                 Width="120" Height="35" Margin="0,0,10,0"
@@ -198,8 +138,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- 👇 Вкладка 2: Цвета -->
-            <TabItem Header="🎨 Цвета" x:Name="TabColors">
+            <!-- Вкладка 1: Цвета -->
+            <TabItem Header="🎨 Цвета">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -210,7 +150,7 @@
                         <StackPanel Margin="5">
 
                             <!-- Основные цвета -->
-                            <GroupBox Header="Основные цвета" x:Name="GroupBoxMainColors"
+                            <GroupBox Header="Основные цвета" 
                           Foreground="{StaticResource TextPrimaryBrush}"
                           Margin="0,0,0,10">
                                 <Grid Margin="10">
@@ -226,18 +166,18 @@
                                         <RowDefinition/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock x:Name="LabelBackgroundStart" Grid.Row="0" Grid.Column="0" Text="Фон (начало):" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Фон (начало):" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxWindowBackgroundStart" Grid.Row="0" Grid.Column="1" 
-                                             Margin="5,5,10,5" Height="25"
-                                             Background="{StaticResource TextBoxBackgroundBrush}"
-                                             Foreground="{StaticResource TextBoxTextBrush}"
-                                             BorderBrush="{StaticResource TextBoxBorderBrush}"
-                                             TextChanged="ColorTextBox_TextChanged"/>
+                                 Margin="5,5,10,5" Height="25"
+                                 Background="{StaticResource TextBoxBackgroundBrush}"
+                                 Foreground="{StaticResource TextBoxTextBrush}"
+                                 BorderBrush="{StaticResource TextBoxBorderBrush}"
+                                 TextChanged="ColorTextBox_TextChanged"/>
                                     <Border x:Name="BorderWindowBackgroundStart" Grid.Row="0" Grid.Column="3" 
-                                            Height="25" Margin="5" 
-                                            BorderBrush="#FF606060" BorderThickness="1"/>
+                                Height="25" Margin="5" 
+                                BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelBackgroundEnd" Grid.Row="1" Grid.Column="0" Text="Фон (конец):" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Фон (конец):" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxWindowBackgroundEnd" Grid.Row="1" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
@@ -248,7 +188,7 @@
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelSelection" Grid.Row="2" Grid.Column="0" Text="Выделение:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Выделение:" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxSelectedBackground" Grid.Row="2" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
@@ -262,7 +202,7 @@
                             </GroupBox>
 
                             <!-- Цвета кнопок -->
-                            <GroupBox Header="Цвета кнопок" x:Name="GroupBoxButtonColors" 
+                            <GroupBox Header="Цвета кнопок" 
                           Foreground="{StaticResource TextPrimaryBrush}"
                           Margin="0,0,0,10">
                                 <Grid Margin="10">
@@ -278,7 +218,7 @@
                                         <RowDefinition/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save (зелёная):" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxButtonSave" Grid.Row="0" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
@@ -289,7 +229,7 @@
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude (красная):" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxButtonExclude" Grid.Row="1" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
@@ -300,7 +240,7 @@
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Settings:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Settings (синяя):" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxButtonInfo" Grid.Row="2" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
@@ -314,9 +254,9 @@
                             </GroupBox>
 
                             <!-- Цвета текста -->
-                            <GroupBox Header="Цвета текста" x:Name="GroupBoxTextColors"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      Margin="0,0,0,10">
+                            <GroupBox Header="Цвета текста" 
+          Foreground="{StaticResource TextPrimaryBrush}"
+          Margin="0,0,0,10">
                                 <Grid Margin="10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150"/>
@@ -328,37 +268,39 @@
                                         <RowDefinition/>
                                         <RowDefinition/>
                                         <RowDefinition/>
+                                        <!-- 👇 Новая строка -->
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock x:Name="LabelPrimary" Grid.Row="0" Grid.Column="0" Text="Основной:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Основной:" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxTextPrimary" Grid.Row="0" Grid.Column="1" 
-                                             Margin="5,5,10,5" Height="25"
-                                             Background="{StaticResource TextBoxBackgroundBrush}"
-                                             Foreground="{StaticResource TextBoxTextBrush}"
-                                             BorderBrush="{StaticResource TextBoxBorderBrush}"
-                                             TextChanged="ColorTextBox_TextChanged"/>
+                 Margin="5,5,10,5" Height="25"
+                 Background="{StaticResource TextBoxBackgroundBrush}"
+                 Foreground="{StaticResource TextBoxTextBrush}"
+                 BorderBrush="{StaticResource TextBoxBorderBrush}"
+                 TextChanged="ColorTextBox_TextChanged"/>
                                     <Border x:Name="BorderTextPrimary" Grid.Row="0" Grid.Column="3" 
-                                            Height="25" Margin="5" 
-                                            BorderBrush="#FF606060" BorderThickness="1"/>
+                Height="25" Margin="5" 
+                BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelSecondary" Grid.Row="1" Grid.Column="0" Text="Вторичный:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Вторичный:" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxTextSecondary" Grid.Row="1" Grid.Column="1" 
-                                             Margin="5,5,10,5" Height="25"
-                                             Background="{StaticResource TextBoxBackgroundBrush}"
-                                             Foreground="{StaticResource TextBoxTextBrush}"
-                                             BorderBrush="{StaticResource TextBoxBorderBrush}"
-                                             TextChanged="ColorTextBox_TextChanged"/>
+                 Margin="5,5,10,5" Height="25"
+                 Background="{StaticResource TextBoxBackgroundBrush}"
+                 Foreground="{StaticResource TextBoxTextBrush}"
+                 BorderBrush="{StaticResource TextBoxBorderBrush}"
+                 TextChanged="ColorTextBox_TextChanged"/>
                                     <Border x:Name="BorderTextSecondary" Grid.Row="1" Grid.Column="3" 
-                                            Height="25" Margin="5" 
-                                            BorderBrush="#FF606060" BorderThickness="1"/>
+                Height="25" Margin="5" 
+                BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelRunning" Grid.Row="2" Grid.Column="0" Text="Запущенные:" VerticalAlignment="Center" Margin="0,5"/>
+                                    <!-- 👇 Новый цвет для запущенных процессов -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Запущенные:" VerticalAlignment="Center" Margin="0,5"/>
                                     <TextBox x:Name="TextBoxRunningProcessText" Grid.Row="2" Grid.Column="1" 
-                                             Margin="5,5,10,5" Height="25"
-                                             Background="{StaticResource TextBoxBackgroundBrush}"
-                                             Foreground="{StaticResource TextBoxTextBrush}"
-                                             BorderBrush="{StaticResource TextBoxBorderBrush}"
-                                             TextChanged="ColorTextBox_TextChanged"/>
+                 Margin="5,5,10,5" Height="25"
+                 Background="{StaticResource TextBoxBackgroundBrush}"
+                 Foreground="{StaticResource TextBoxTextBrush}"
+                 BorderBrush="{StaticResource TextBoxBorderBrush}"
+                 TextChanged="ColorTextBox_TextChanged"/>
                                     <Border x:Name="BorderRunningProcessText" Grid.Row="2" Grid.Column="3" 
                 Height="25" Margin="5" 
                 BorderBrush="#FF606060" BorderThickness="1"/>
@@ -390,8 +332,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- 👇 Вкладка 3: Исключённые -->
-            <TabItem Header="📋 Исключённые" x:Name="TabExcluded">
+            <!-- Вкладка 2: Исключённые приложения -->
+            <TabItem Header="📋 Исключённые">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -432,10 +374,12 @@
 
                             <Button.Style>
                                 <Style TargetType="Button">
+                                    <!-- Цвета по умолчанию (активная кнопка) -->
                                     <Setter Property="Background" Value="{StaticResource ButtonSaveBrush}"/>
                                     <Setter Property="Foreground" Value="{StaticResource ButtonTextBrush}"/>
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="Cursor" Value="Hand"/>
+
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
@@ -449,12 +393,17 @@
                                                                       Margin="10,5"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
+                                                    <!-- Наведение мыши -->
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSaveHoverBrush}"/>
                                                     </Trigger>
+
+                                                    <!-- Нажатие -->
                                                     <Trigger Property="IsPressed" Value="True">
                                                         <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSavePressedBrush}"/>
                                                     </Trigger>
+
+                                                    <!-- 👇 НЕАКТИВНОЕ СОСТОЯНИЕ -->
                                                     <Trigger Property="IsEnabled" Value="False">
                                                         <Setter TargetName="Border" Property="Background" Value="#FF505050"/>
                                                         <Setter Property="Foreground" Value="#FF888888"/>
