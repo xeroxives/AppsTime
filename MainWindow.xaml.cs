@@ -25,7 +25,8 @@ namespace AppsTime
         private ProcessStat _selectedItem;
         private CustomData _customData;
         private CustomColors _customColors;
-        private string _lastProcessListHash = "";
+		private ProcessPathData _processPaths;
+		private string _lastProcessListHash = "";
 
         public MainWindow()
         {
@@ -36,9 +37,9 @@ namespace AppsTime
             CustomColorsManager.ApplyToResources(_customColors);
 
             _customData = CustomDataManager.Load();
-
-            // 👇 Устанавливаем глобальный формат времени
-            ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
+			_processPaths = ProcessPathManager.Load();
+			// 👇 Устанавливаем глобальный формат времени
+			ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
 
             // 👇 Применяем сохранённый язык
             ApplySavedLanguage();
@@ -46,7 +47,7 @@ namespace AppsTime
             LoadAllTimeStats();
             InitializeRefreshTimer();
             UpdateMainWindowBackground();
-        }
+		}
 
         // 👇 Применяем сохранённый язык при запуске
         private void ApplySavedLanguage()
@@ -65,7 +66,7 @@ namespace AppsTime
             AppLogger.Log($"[Lang] Применён язык: {lang}");
 
             // Обновляем заголовок окна
-            Title = (lang == "en") ? "AppsTime" : "AppsTime";
+            Title = (lang == "en") ? "AppsTime v1.12" : "AppsTime v1.12";
 
             // Обновляем основные элементы UI
             UpdateMainLabels(lang);
@@ -110,7 +111,7 @@ namespace AppsTime
 
             if (btnExclude != null) btnExclude.Content = (lang == "en") ? "Exclude" : "Исключить";
             if (btnSave != null) btnSave.Content = (lang == "en") ? "Save" : "Сохранить";
-            if (btnSettings != null) btnSettings.Content = (lang == "en") ? "⚙️ Settings" : "⚙️ Настройки";
+            if (btnSettings != null) btnSettings.Content = (lang == "en") ? "⚙️" : "⚙️";
         }
 
         // 👇 Обновляет текст пунктов контекстного меню
@@ -121,6 +122,7 @@ namespace AppsTime
             if (ListBoxContextMenu != null)
             {
                 UpdateMenuItem(MenuExclude, "🚫 Исключить", "🚫 Exclude");
+                UpdateMenuItem(MenuFileLocation, "📁 Расположение файла", "📁 File location");
                 UpdateMenuItem(MenuCombine, "🔗 Объединить", "🔗 Combine");
                 UpdateMenuItem(MenuSetTag, "🏷️ Установить тег", "🏷️ Set tag");
                 UpdateMenuItem(MenuResetTime, "🔄 Сбросить время", "🔄 Reset time");
@@ -227,84 +229,93 @@ namespace AppsTime
             }
         }
 
-        private void LoadAllTimeStats()
-        {
-            try
-            {
-                var selectedItem = ListBoxAllTime.SelectedItem as ProcessStat;
-                string selectedOriginalKey = selectedItem?.OriginalKey;
+		private void LoadAllTimeStats()
+		{
+			try
+			{
+				var selectedItem = ListBoxAllTime.SelectedItem as ProcessStat;
+				string selectedOriginalKey = selectedItem?.OriginalKey;
 
-                ListBoxAllTime.SelectionChanged -= ListBoxAllTime_SelectionChanged;
+				ListBoxAllTime.SelectionChanged -= ListBoxAllTime_SelectionChanged;
 
-                var newStats = new ObservableCollection<ProcessStat>();
-                var stats = DataParser.GetAllTimeStats();
+				var newStats = new ObservableCollection<ProcessStat>();
+				var stats = DataParser.GetAllTimeStats();
 
-                ProcessStat restoredItem = null;
+				ProcessStat restoredItem = null;
 
-                foreach (var kvp in stats.OrderByDescending(x => x.Value))
-                {
-                    if (_customData.ExcludedProcesses.Contains(kvp.Key))
-                    {
-                        continue;
-                    }
+				foreach (var kvp in stats.OrderByDescending(x => x.Value))
+				{
+					if (_customData.ExcludedProcesses.Contains(kvp.Key))
+					{
+						continue;
+					}
 
-                    // 👇 Фактическое время из лога
-                    int actualTime = kvp.Value;
+					int actualTime = kvp.Value;
+					int delta = _customData.TimeOverrides.TryGetValue(kvp.Key, out var d) ? d : 0;
+					int displayTime = actualTime + delta;
 
-                    // 👇 Получаем дельту по ОРИГИНАЛЬНОМУ ключу
-                    int delta = _customData.TimeOverrides.TryGetValue(kvp.Key, out var d) ? d : 0;
+					var processStat = new ProcessStat
+					{
+						OriginalKey = kvp.Key,
+						ProcessName = kvp.Key,
+						TotalSeconds = displayTime
+					};
 
-                    // 👇 Отображаемое время = фактическое + дельта
-                    int displayTime = actualTime + delta;
+					if (_customData.NameAliases.TryGetValue(kvp.Key, out var alias))
+					{
+						processStat.ProcessName = alias;
+					}
 
-                    var processStat = new ProcessStat
-                    {
-                        OriginalKey = kvp.Key,
-                        ProcessName = kvp.Key,
-                        TotalSeconds = displayTime
-                    };
+					// 👇 НОВОЕ: Сохраняем путь процесса
+					try
+					{
+						var processes = System.Diagnostics.Process.GetProcessesByName(kvp.Key);
+						if (processes.Length > 0 && processes[0].MainModule != null)
+						{
+							string processPath = processes[0].MainModule.FileName;
+							ProcessPathManager.UpdateProcessPath(kvp.Key, processPath);
+						}
+					}
+					catch (Exception ex)
+					{
+						// Нет доступа к процессу - пропускаем
+						AppLogger.Log($"[ProcessPath] Нет доступа к {kvp.Key}: {ex.Message}");
+					}
 
-                    // Применяем алиас для отображения
-                    if (_customData.NameAliases.TryGetValue(kvp.Key, out var alias))
-                    {
-                        processStat.ProcessName = alias;
-                    }
+					newStats.Add(processStat);
 
-                    newStats.Add(processStat);
+					if (selectedOriginalKey != null && processStat.OriginalKey == selectedOriginalKey)
+					{
+						restoredItem = processStat;
+					}
+					AppLogger.Log($"[Debug] {kvp.Key} | Лог: {kvp.Value}s | Дельта: {delta}s | Отображение: {displayTime}s");
+				}
 
-                    // Восстанавливаем выделение по оригинальному ключу
-                    if (selectedOriginalKey != null && processStat.OriginalKey == selectedOriginalKey)
-                    {
-                        restoredItem = processStat;
-                    }
-                    AppLogger.Log($"[Debug] {kvp.Key} | Лог: {kvp.Value}s | Дельта: {delta}s | Отображение: {displayTime}s");
-                }
+				AllTimeStats = newStats;
+				DataContext = null;
+				DataContext = this;
 
-                AllTimeStats = newStats;
-                DataContext = null;
-                DataContext = this;
+				ListBoxAllTime.ItemsSource = AllTimeStats;
 
-                ListBoxAllTime.ItemsSource = AllTimeStats;
+				_collectionView = CollectionViewSource.GetDefaultView(AllTimeStats);
+				_collectionView.Refresh();
 
-                _collectionView = CollectionViewSource.GetDefaultView(AllTimeStats);
-                _collectionView.Refresh();
+				if (restoredItem != null)
+				{
+					ListBoxAllTime.SelectedItem = restoredItem;
+				}
 
-                if (restoredItem != null)
-                {
-                    ListBoxAllTime.SelectedItem = restoredItem;
-                }
+				ListBoxAllTime.SelectionChanged += ListBoxAllTime_SelectionChanged;
 
-                ListBoxAllTime.SelectionChanged += ListBoxAllTime_SelectionChanged;
+				AppLogger.Log($"[UI] Список обновлён ({newStats.Count} процессов)");
+			}
+			catch (Exception ex)
+			{
+				AppLogger.LogError($"[UI] Ошибка загрузки статистики: {ex.Message}");
+			}
+		}
 
-                AppLogger.Log($"[UI] Список обновлён ({newStats.Count} процессов)");
-            }
-            catch (Exception ex)
-            {
-                AppLogger.LogError($"[UI] Ошибка загрузки статистики: {ex.Message}");
-            }
-        }
-
-        protected override void OnClosed(EventArgs e)
+		protected override void OnClosed(EventArgs e)
         {
             _refreshTimer?.Stop();
             _refreshTimer?.Dispose();
@@ -498,8 +509,99 @@ namespace AppsTime
             if (_selectedItem == null) return;
             ButtonExclude_Click(sender, e);
         }
+		// 👇 ОБНОВЛЁННЫЙ МЕТОД: Открыть расположение файла (с приоритетом)
+		private void MenuFileLocation_Click(object sender, RoutedEventArgs e)
+		{
+			if (_selectedItem == null)
+			{
+				ShowLocalizedMessageBox(
+					"Выберите процесс!", "Select a process!",
+					"Внимание", "Warning",
+					MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
 
-        private void MenuCombine_Click(object sender, RoutedEventArgs e)
+			try
+			{
+				string processName = _selectedItem.ProcessName;
+				string originalKey = _selectedItem.OriginalKey ?? processName;
+				string processPath = null;
+
+				// 👇 ПРИОРИТЕТ 1: Пробуем получить путь от запущенного процесса
+				try
+				{
+					var processes = System.Diagnostics.Process.GetProcessesByName(originalKey);
+					if (processes.Length > 0 && processes[0].MainModule != null)
+					{
+						processPath = processes[0].MainModule.FileName;
+						AppLogger.Log($"[Menu] Получен путь от процесса: {processPath}");
+					}
+				}
+				catch (Exception ex)
+				{
+					AppLogger.Log($"[Menu] Нет доступа к процессу {originalKey}: {ex.Message}");
+				}
+
+				// 👇 ПРИОРИТЕТ 2: Если процесс не запущен - берём из paths.json
+				if (string.IsNullOrEmpty(processPath))
+				{
+					processPath = ProcessPathManager.GetProcessPath(originalKey);
+					if (!string.IsNullOrEmpty(processPath))
+					{
+						AppLogger.Log($"[Menu] Получен путь из paths.json: {processPath}");
+					}
+				}
+
+				// 👇 Открываем проводник
+				if (!string.IsNullOrEmpty(processPath) && System.IO.File.Exists(processPath))
+				{
+					System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{processPath}\"");
+					AppLogger.Log($"[Menu] Открыт проводник с выделением: {processPath}");
+				}
+				else if (!string.IsNullOrEmpty(processPath))
+				{
+					// Файл не найден, но путь есть - открываем папку
+					string directory = System.IO.Path.GetDirectoryName(processPath);
+					if (!string.IsNullOrEmpty(directory) && System.IO.Directory.Exists(directory))
+					{
+						System.Diagnostics.Process.Start("explorer.exe", directory);
+						AppLogger.Log($"[Menu] Открыта папка (файл не найден): {directory}");
+
+						ShowLocalizedMessageBox(
+							"Файл не найден по сохранённому пути.\n\nОткрыта папка из last known location.",
+							"File not found at saved path.\n\nOpened folder from last known location.",
+							"Предупреждение", "Warning",
+							MessageBoxButton.OK, MessageBoxImage.Warning);
+					}
+					else
+					{
+						ShowLocalizedMessageBox(
+							"Путь к файлу не найден.\n\nПроцесс никогда не был запущен или путь устарел.",
+							"Process path not found.\n\nProcess was never run or path is outdated.",
+							"Ошибка", "Error",
+							MessageBoxButton.OK, MessageBoxImage.Error);
+					}
+				}
+				else
+				{
+					ShowLocalizedMessageBox(
+						"Путь к файлу не найден.\n\nПроцесс никогда не был запущен во время работы программы.",
+						"Process path not found.\n\nProcess was never run while this app was active.",
+						"Ошибка", "Error",
+						MessageBoxButton.OK, MessageBoxImage.Error);
+				}
+			}
+			catch (Exception ex)
+			{
+				AppLogger.LogError($"[Menu] Ошибка открытия проводника: {ex.Message}");
+				ShowLocalizedMessageBox(
+					$"Ошибка: {ex.Message}",
+					$"Error: {ex.Message}",
+					"Ошибка", "Error",
+					MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void MenuCombine_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
             string lang = _customData.Language ?? "ru";
