@@ -1,13 +1,15 @@
 ﻿using AppsTime.Data;
 using AppsTime.Helpers;
 using AppsTime.Models;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
+using CheckBox = System.Windows.Controls.CheckBox;
+using Color = System.Windows.Media.Color;
+using GroupBox = System.Windows.Controls.GroupBox;
+using Label = System.Windows.Controls.Label;
+using MessageBox = System.Windows.MessageBox;
 
 namespace AppsTime
 {
@@ -35,11 +37,18 @@ namespace AppsTime
             LoadColors();
             LoadExcludedApps();
             LoadGeneralSettings();
-        }
 
-        // 👇 Применяет локализацию ко всем элементам окна
-        // 👇 Применяет локализацию ко всем элементам окна
-        // 👇 Применяет локализацию ко всем элементам окна
+            // 👇 Подключаем события для динамического включения/отключения MinimizeOnStart
+            if (CheckBoxAutoStart != null)
+            {
+                CheckBoxAutoStart.Checked += CheckBoxAutoStart_Checked;
+                CheckBoxAutoStart.Unchecked += CheckBoxAutoStart_Unchecked;
+            }
+
+            // 👇 Обновляем начальное состояние CheckBoxMinimizeOnStart
+            UpdateMinimizeOnStartEnabled();
+        }
+        #region Localization en_ru
         // 👇 Применяет локализацию ко всем элементам окна
         private void ApplyLocalization()
         {
@@ -74,6 +83,30 @@ namespace AppsTime
             var labelLanguage = FindName("LabelLanguage") as TextBlock;
             if (labelLanguage != null)
                 labelLanguage.Text = (lang == "en") ? "Language:" : "Язык:";
+
+            // 👇 Группа "Закрытие приложения"
+            var groupMinimize = FindName("GroupBoxMinimize") as GroupBox;
+            if (groupMinimize != null)
+                groupMinimize.Header = (lang == "en") ? "Application" : "Приложение";
+
+            // 👇 CheckBox "Minimize on exit"
+            var checkBoxMinimize = FindName("CheckBoxMinimizeOnExit") as CheckBox;
+            if (checkBoxMinimize != null)
+                checkBoxMinimize.Content = (lang == "en") ? "Minimize to tray on close" : "Сворачивать в трей при закрытии";
+
+            // CheckBox "AutoStartup"
+            var checkBoxAutoStart = FindName("CheckBoxAutoStart") as CheckBox;
+            if (checkBoxAutoStart != null)
+                checkBoxAutoStart.Content = (lang == "en")
+                    ? "Launch application when Windows starts"
+                    : "Запускать приложение при старте Windows";
+
+            // 👇 CheckBox "Minimize on Start"
+            var checkBoxMinimizeOnStart = FindName("CheckBoxMinimizeOnStart") as CheckBox;
+            if (checkBoxMinimizeOnStart != null)
+                checkBoxMinimizeOnStart.Content = (lang == "en")
+                    ? "Minimize to tray on start"
+                    : "Сворачивать в трей при запуске";
 
             var groupTimeFormat = FindName("GroupBoxTimeFormat") as GroupBox;
             if (groupTimeFormat != null)
@@ -156,8 +189,10 @@ namespace AppsTime
             // Кнопка Закрыть
             if (ButtonClose != null)
                 ButtonClose.Content = (lang == "en") ? "Close" : "Закрыть";
-        }
 
+
+        }
+        
         // 👇 Обновляет текст элемента ComboBox
         private void UpdateComboBoxItem(string itemName, string ruText, string enText)
         {
@@ -171,24 +206,52 @@ namespace AppsTime
         {
             return (_customData.Language ?? "ru") == "en" ? en : ru;
         }
-
-        // 👇 Обновляет текст метки
-        //private void UpdateLabelText(string ruText, string enText)
-        //{
-        //    var label = FindVisualChildren<TextBlock>((Grid)Content)
-        //        .FirstOrDefault(t => t.Text == ruText || t.Text == enText);
-        //    if (label != null)
-        //        label.Text = (_customData.Language ?? "ru") == "en" ? enText : ruText;
-        //}
-
-        // 👇 Helper для получения текста на нужном языке
-
+        #endregion
         #region General Settings
+
+        // 👇 Включает/отключает "Minimize on Start" в зависимости от автозапуска
+        private void CheckBoxAutoStart_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateMinimizeOnStartEnabled();
+        }
+
+        private void CheckBoxAutoStart_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateMinimizeOnStartEnabled();
+        }
+
+        // 👇 Обновляет IsEnabled для CheckBoxMinimizeOnStart
+        private void UpdateMinimizeOnStartEnabled()
+        {
+            if (CheckBoxMinimizeOnStart != null && CheckBoxAutoStart != null)
+            {
+                // Доступен ТОЛЬКО если автозапуск включен
+                CheckBoxMinimizeOnStart.IsEnabled = CheckBoxAutoStart.IsChecked ?? false;
+
+                // Если автозапуск выключен — снимаем галочку с MinimizeOnStart
+                if (!(CheckBoxAutoStart.IsChecked ?? false))
+                {
+                    CheckBoxMinimizeOnStart.IsChecked = false;
+                }
+            }
+        }
 
         private void LoadGeneralSettings()
         {
             // Загружаем язык
             LoadLanguage();
+
+            // Загружаем настройку "Minimize on exit"
+            if (CheckBoxMinimizeOnExit != null)
+                CheckBoxMinimizeOnExit.IsChecked = _customData.MinimizeOnExit;
+
+            // Загружаем настройку "AutoStart"
+            if (CheckBoxAutoStart != null)
+                CheckBoxAutoStart.IsChecked = AutoStartManager.IsEnabled();
+
+            // 👇 Загружаем настройку "Minimize on Start"
+            if (CheckBoxMinimizeOnStart != null)
+                CheckBoxMinimizeOnStart.IsChecked = _customData.MinimizeOnStart;
 
             // Загружаем формат времени
             string currentFormat = _customData.TimeFormat ?? "hh_mm_ss";
@@ -231,7 +294,7 @@ namespace AppsTime
             if (ComboBoxTimeFormat.SelectedItem is ComboBoxItem selectedItem)
             {
                 string format = selectedItem.Tag?.ToString() ?? "hh_mm_ss";
-                int sampleSeconds = 456789;
+                int sampleSeconds = 444600;
 
                 string preview = FormatTime(sampleSeconds, format);
                 TextBlockTimePreview.Text = preview;
@@ -263,6 +326,28 @@ namespace AppsTime
                 _customData.Language = newLanguage;
             }
 
+            // Сохраняем "Minimize on exit"
+            if (CheckBoxMinimizeOnExit != null)
+            {
+                _customData.MinimizeOnExit = CheckBoxMinimizeOnExit.IsChecked ?? true;
+            }
+
+            // Сохраняем "AutoStart"
+            if (CheckBoxAutoStart != null)
+            {
+                bool autoStartEnabled = CheckBoxAutoStart.IsChecked ?? false;
+                if (autoStartEnabled != AutoStartManager.IsEnabled())
+                {
+                    AutoStartManager.Toggle();
+                }
+            }
+
+            // 👇 Сохраняем "Minimize on Start"
+            if (CheckBoxMinimizeOnStart != null)
+            {
+                _customData.MinimizeOnStart = CheckBoxMinimizeOnStart.IsChecked ?? true;
+            }
+
             // Сохраняем формат времени
             if (ComboBoxTimeFormat.SelectedItem is ComboBoxItem timeItem)
             {
@@ -292,7 +377,13 @@ namespace AppsTime
             if (result == MessageBoxResult.Yes)
             {
                 _customData.Language = "ru";
+                _customData.MinimizeOnExit = true;
+                _customData.MinimizeOnStart = true;  // 👇 Сбрасываем и эту настройку
                 _customData.TimeFormat = "hh_mm_ss";
+
+                // 👇 Правильный способ отключить автозапуск (не через CustomData)
+                AutoStartManager.Disable();
+
                 CustomDataManager.Save(_customData);
 
                 LoadLanguage();
@@ -307,7 +398,10 @@ namespace AppsTime
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-
+        private void ButtonClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
         #endregion
 
         #region Colors
@@ -353,13 +447,13 @@ namespace AppsTime
 
         private void ColorTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (sender is TextBox textBox)
+            if (sender is System.Windows.Controls.TextBox textBox)
             {
                 UpdatePreview(textBox);
             }
         }
 
-        private void UpdatePreview(TextBox textBox)
+        private void UpdatePreview(System.Windows.Controls.TextBox textBox)
         {
             try
             {
@@ -431,18 +525,18 @@ namespace AppsTime
         {
             try
             {
-                var color = (Color)ColorConverter.ConvertFromString(hexColor);
-                var brush = new SolidColorBrush(color);
+                var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hexColor);
+                var brush = new System.Windows.Media.SolidColorBrush(color);
 
-                if (Application.Current.Resources.Contains(resourceName))
+                if (System.Windows.Application.Current.Resources.Contains(resourceName))
                 {
-                    Application.Current.Resources[resourceName] = color;
+                    System.Windows.Application.Current.Resources[resourceName] = color;
                 }
 
                 var brushName = resourceName + "Brush";
-                if (Application.Current.Resources.Contains(brushName))
+                if (System.Windows.Application.Current.Resources.Contains(brushName))
                 {
-                    Application.Current.Resources[brushName] = brush;
+                    System.Windows.Application.Current.Resources[brushName] = brush;
                 }
             }
             catch { }
@@ -557,11 +651,6 @@ namespace AppsTime
         }
 
         #endregion
-
-        private void ButtonClose_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
 
         #region Helpers
 

@@ -1,8 +1,10 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
+
+using Clipboard = System.Windows.Clipboard;
+using Application = System.Windows.Application;
+using DataObject = System.Windows.DataObject;
 
 namespace AppsTime.Helpers
 {

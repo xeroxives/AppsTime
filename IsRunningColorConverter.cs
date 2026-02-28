@@ -5,6 +5,8 @@ using System.Linq;
 using System.Windows.Data;
 using System.Windows.Media;
 using AppsTime.Data;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace AppsTime.Converters
 {

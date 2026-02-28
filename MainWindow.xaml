@@ -3,54 +3,99 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:AppsTime"
         xmlns:behaviors="clr-namespace:AppsTime.Behaviors"
         mc:Ignorable="d"
-        Title="AppsTime" Height="450" Width="800" ResizeMode="CanMinimize">
+        Height="540" Width="1000" 
+        ResizeMode="CanMinimize"
+        Closing="MainWindow_Closing">
 
 	<Grid Background="{DynamicResource WindowBackgroundStartBrush}">
 
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="2*"/>
-			<ColumnDefinition Width="315"/>
-			<ColumnDefinition Width="0.6*"/>
-			<ColumnDefinition Width="0.6*"/>
+			<ColumnDefinition Width="360"/>
+			<ColumnDefinition Width="575"/>
+			<ColumnDefinition Width="60"/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<RowDefinition/>
 			<RowDefinition/>
 			<RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
 		</Grid.RowDefinitions>
 
 		<!-- Заголовок -->
-		<Label x:Name="LabelAllTime"
-               Content="Всё время:" 
-               Foreground="{StaticResource TextPrimaryBrush}" 
-               Margin="20,0,0,0" FontWeight="Bold"/>
+		<!-- 👇 Заголовок с общим временем активности -->
+		<!-- 👇 Заголовок с общим временем активности -->
+		<Grid Grid.Column="0" VerticalAlignment="Top"
+			  Grid.Row="0"
+			  Margin="20,10,20,0"
+			  Panel.ZIndex="100"
+			  Background="Transparent"
+			  Height="25">
+
+			<Grid.ColumnDefinitions>
+				<!-- 👇 Колонка 0: Иконка (фиксированный размер) -->
+				<ColumnDefinition Width="24"/>
+				<!-- 👇 Колонка 1: Отступ между иконкой и текстом -->
+				<ColumnDefinition Width="8"/>
+				<!-- 👇 Колонка 2: Текст заголовка (по размеру контента) -->
+				<ColumnDefinition Width="Auto"/>
+				<!-- 👇 Колонка 3: Время (занимает всё оставшееся место) -->
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<!--Stretch="Uniform"-->
+
+			<!-- Текст заголовка (после иконки) -->
+			<Label x:Name="LabelTotalTimeHeader"
+				   Grid.Column="2"
+				   Content="Всё время: " 
+				   Foreground="{StaticResource TextPrimaryBrush}" 
+				   FontWeight="Bold"
+				   Padding="0" Margin="0"
+				   VerticalAlignment="Center"/>
+
+			<!-- Время (справа, прижато к правому краю) -->
+			<TextBlock x:Name="TextBlockTotalTime"
+					   Grid.Column="3"
+					   Text="00:00:00"
+					   VerticalAlignment="Center"
+					   HorizontalAlignment="Right"
+					   TextAlignment="Right"
+					   FontSize="14"
+					   FontWeight="Bold"
+					   Margin="10,0,10,0">
+				<TextBlock.Foreground>
+					<SolidColorBrush Color="#FF8C8C8C"/>
+				</TextBlock.Foreground>
+			</TextBlock>
+		</Grid>
 
 		<!-- ListBox -->
 		<ListBox x:Name="ListBoxAllTime" 
-                 Grid.Column="0" 
-                 Grid.Row="0" 
-                 Grid.RowSpan="3"
-                 Margin="20,30,20,10"
-                 ItemsSource="{Binding AllTimeStats}"
-                 Background="Transparent"
-                 Foreground="{StaticResource ListBoxTextBrush}"
-                 BorderThickness="0"
-                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 behaviors:SmoothScrollBehavior.EnableSmoothScroll="True"
-                 SelectionChanged="ListBoxAllTime_SelectionChanged"
-                 HorizontalContentAlignment="Stretch">
+				Grid.Column="0" 
+				Grid.Row="0" 
+				Grid.RowSpan="5"
+				Margin="15,30,15,10"
+				ItemsSource="{Binding AllTimeStats}"
+				Background="Transparent"
+				Foreground="{StaticResource ListBoxTextBrush}"
+				BorderThickness="0"
+				ScrollViewer.VerticalScrollBarVisibility="Hidden"
+				ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+				behaviors:SmoothScrollBehavior.EnableSmoothScroll="True"
+				SelectionChanged="ListBoxAllTime_SelectionChanged"
+				HorizontalContentAlignment="Stretch">
 			<ListBox.ContextMenu>
 				<ContextMenu x:Name="ListBoxContextMenu"
-                 Background="{StaticResource PanelBackgroundBrush}"
-                 Foreground="{StaticResource TextPrimaryBrush}"
-                 BorderBrush="{StaticResource ListBoxBorderBrush}"
-                 BorderThickness="1"
-                 Padding="0"
-                 Margin="0">
+                     Background="{StaticResource PanelBackgroundBrush}"
+                     Foreground="{StaticResource TextPrimaryBrush}"
+                     BorderBrush="{StaticResource ListBoxBorderBrush}"
+                     BorderThickness="1"
+                     Padding="0"
+                     Margin="0">
 
 					<ContextMenu.Resources>
 						<!-- 👇 Стиль для самого ContextMenu -->
@@ -61,12 +106,12 @@
 								<Setter.Value>
 									<ControlTemplate TargetType="ContextMenu">
 										<Border x:Name="Border"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    Padding="0">
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Padding="0">
 											<StackPanel IsItemsHost="True" 
-                                            KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                                KeyboardNavigation.DirectionalNavigation="Contained"/>
 										</Border>
 									</ControlTemplate>
 								</Setter.Value>
@@ -81,9 +126,9 @@
 								<Setter.Value>
 									<ControlTemplate TargetType="MenuItem">
 										<Border x:Name="Border"
-                                    Background="Transparent"
-                                    Padding="{TemplateBinding Padding}"
-                                    Margin="0">
+                                        Background="Transparent"
+                                        Padding="{TemplateBinding Padding}"
+                                        Margin="0">
 											<ContentPresenter Content="{TemplateBinding Header}"/>
 										</Border>
 										<ControlTemplate.Triggers>
@@ -108,46 +153,49 @@
 
 					<!-- Исключить -->
 					<MenuItem x:Name="MenuExclude"
-                  Header="🚫 Исключить"
-                  Click="MenuExclude_Click"/>
+                      Header="🚫 Исключить"
+                      Click="MenuExclude_Click"/>
 
-                    <Separator/>
-                    <MenuItem x:Name="MenuFileLocation"
+					<Separator/>
+					<MenuItem x:Name="MenuFileLocation"
 							  Header="📁 Расположение файла"
 							  Click="MenuFileLocation_Click"/>
+                    <MenuItem x:Name="MenuSelectPath"
+							  Header="🗂️ Указать путь"
+							  Click="MenuSelectPath_Click"/>
 
-                    <Separator/>
+					<Separator/>
 
-                    <!-- Объединить -->
+					<!-- Объединить -->
 					<MenuItem x:Name="MenuCombine"
-                              Header="🔗 Объединить"
-                              Click="MenuCombine_Click"
-                              IsEnabled="False"/>
+                      Header="🔗 Объединить"
+                      Click="MenuCombine_Click"
+                      IsEnabled="False"/>
 
 					<!-- Установить тег -->
 					<MenuItem x:Name="MenuSetTag"
-                              Header="🏷️ Установить тег"
-                              Click="MenuSetTag_Click"
-                              IsEnabled="False"/>
+                      Header="🏷️ Установить тег"
+                      Click="MenuSetTag_Click"
+                      IsEnabled="False"/>
 
 					<Separator/>
 
 					<!-- Сбросить время -->
 					<MenuItem x:Name="MenuResetTime"
-                  Header="🔄 Сбросить время"
-                  Click="MenuResetTime_Click"/>
+                      Header="🔄 Сбросить время"
+                      Click="MenuResetTime_Click"/>
 
 					<Separator/>
 
 					<!-- Копировать имя -->
 					<MenuItem x:Name="MenuCopyName"
-                  Header="📋 Копировать имя"
-                  Click="MenuCopyName_Click"/>
+                      Header="📋 Копировать имя"
+                      Click="MenuCopyName_Click"/>
 
 					<!-- Копировать время -->
 					<MenuItem x:Name="MenuCopyTime"
-                  Header="📋 Копировать время"
-                  Click="MenuCopyTime_Click"/>
+                      Header="📋 Копировать время"
+                      Click="MenuCopyTime_Click"/>
 
 				</ContextMenu>
 			</ListBox.ContextMenu>
@@ -168,18 +216,29 @@
 
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<Grid>
+					<Grid Margin="0,4">
 						<Grid.ColumnDefinitions>
+							<!-- 👇 Иконка приложения -->
+							<ColumnDefinition Width="Auto"/>
+							<!-- Имя процесса -->
 							<ColumnDefinition Width="*"/>
+							<!-- Время -->
 							<ColumnDefinition Width="Auto"/>
 						</Grid.ColumnDefinitions>
 
+						<!-- 👇 Иконка приложения (24x24) -->
+						<Image Grid.Column="0"
+							   Source="{Binding Icon}"
+							   Width="16" Height="16"
+							   Margin="0,0,10,0"
+							   VerticalAlignment="Center"/>
+
 						<!-- Имя процесса (слева) - цвет зависит от статуса -->
-						<TextBlock Grid.Column="0" 
-                       Text="{Binding ProcessName}" 
-                       VerticalAlignment="Center"
-                       FontSize="14"
-                       Margin="5,0">
+						<TextBlock Grid.Column="1" 
+								   Text="{Binding ProcessName}" 
+								   VerticalAlignment="Center"
+								   FontSize="14"
+								   Margin="5,0">
 							<TextBlock.Foreground>
 								<MultiBinding Converter="{StaticResource IsRunningColorConverter}">
 									<!-- Имя процесса -->
@@ -193,19 +252,20 @@
 						</TextBlock>
 
 						<!-- Время (справа) -->
-						<TextBlock Grid.Column="1" 
-                       Text="{Binding TimeFormatted}" 
-                       VerticalAlignment="Center"
-                       FontSize="14"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Margin="10,0"/>
+						<TextBlock Grid.Column="2" 
+                           Text="{Binding TimeFormatted}" 
+                           VerticalAlignment="Center"
+						   HorizontalAlignment="Right"
+                           FontSize="14"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="10,0"/>
 					</Grid>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
 		</ListBox>
 
 		<!-- Правая панель -->
-		<StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="20,10,20,10">
+		<StackPanel Grid.Column="1" Grid.RowSpan="2" Margin="30,10,210,10">
 
 			<StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
 				<Label x:Name="LabelName"
@@ -213,7 +273,7 @@
                        Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
 				<TextBox x:Name="TextBoxProcessName" 
                          Margin="10,0,10,0" 
-                         Width="200" 
+                         Width="265" 
                          Height="30" 
                          VerticalAlignment="Center" 
                          FontSize="14"
@@ -224,11 +284,11 @@
                          HorizontalAlignment="Stretch"/>
 			</StackPanel>
 
-			<StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
-				<Label x:Name="LabelTime"
+            <StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
+                <Label x:Name="LabelTime"
                        Content="Время (секунды):" VerticalAlignment="Center" 
                        Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
-				<TextBox x:Name="TextBoxTimeSeconds" 
+                <TextBox x:Name="TextBoxTimeSeconds" 
                          Margin="10,0,10,0" 
                          Width="200" 
                          Height="30" 
@@ -238,20 +298,9 @@
                          Foreground="{StaticResource TextBoxTextBrush}"
                          BorderBrush="{StaticResource TextBoxBorderBrush}"
                          HorizontalAlignment="Stretch"/>
-			</StackPanel>
+            </StackPanel>
 
-			<StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Center" Margin="10,0,10,0">
-				<Label x:Name="LabelFormatted"
-                       Content="Форматировано:" VerticalAlignment="Center" 
-                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-				<TextBlock x:Name="TextBlockTimeFormatted" 
-                           Margin="10,0,10,0" 
-                           VerticalAlignment="Center" 
-                           FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"/>
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,10">
+            <StackPanel Orientation="Horizontal" Height="50" Margin="10,0,10,10">
 				<Button x:Name="ButtonExclude" 
                         Click="ButtonExclude_Click"
                         Width="100" 
@@ -309,30 +358,25 @@
 		</StackPanel>
 
 		<Button Grid.Column="3"
-        x:Name="ButtonSettings"
-        Content="⚙️"
-        Height="35" Width="35"
-        Margin="0,10,10,0"
-        Foreground="{StaticResource ButtonTextBrush}"
-        BorderThickness="0" 
-        FontSize="16"
-        Click="ButtonSettings_Click"
-        Cursor="Hand" 
-        Background="#00288CC8" 
-        HorizontalAlignment="Right" 
-        VerticalAlignment="Top">
+				x:Name="ButtonSettings"
+				Content="⚙️"
+				Height="35" Width="35"
+				Margin="0,10,20,0"
+				Foreground="{StaticResource ButtonTextBrush}"
+				BorderThickness="0" 
+				FontSize="16"
+				Click="ButtonSettings_Click"
+				Cursor="Hand" 
+				Background="#00FFFFFF" 
+				HorizontalAlignment="Right" 
+				VerticalAlignment="Top">
 			<Button.Style>
 				<Style TargetType="Button">
-					<!-- Фиксируем фон (не меняется) -->
 					<Setter Property="Background" Value="#00FFFFFF"/>
-
 					<Style.Triggers>
-						<!-- 👇 При наведении меняем ТОЛЬКО цвет текста -->
 						<Trigger Property="IsMouseOver" Value="True">
 							<Setter Property="Foreground" Value="#FFAAAAAA"/>
 						</Trigger>
-
-						<!-- 👇 При нажатии меняем ТОЛЬКО цвет текста -->
 						<Trigger Property="IsPressed" Value="True">
 							<Setter Property="Foreground" Value="#FFFFFFFF"/>
 						</Trigger>
@@ -340,5 +384,108 @@
 				</Style>
 			</Button.Style>
 		</Button>
-	</Grid>
+        <!-- 👇 Секция графика -->
+        <Border x:Name="GraphSection"
+				Grid.Column="1" 
+				Grid.Row="2" 
+				Grid.ColumnSpan="2" 
+				Grid.RowSpan="3"
+				Margin="10,0,20,10"
+				Background="{StaticResource PanelBackgroundBrush}"
+				BorderBrush="{StaticResource ListBoxBorderBrush}"
+				BorderThickness="1"
+				CornerRadius="8"
+				Padding="15"
+				Visibility="Collapsed">
+
+            <StackPanel>
+                <!-- Заголовок + управление -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Название процесса -->
+                    <TextBlock Grid.Column="0"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       VerticalAlignment="Center"/>
+                    <!--x:Name="GraphTitle" Text="График: chrome.exe"-->
+
+                    <!-- Выбор диапазона -->
+                    <ComboBox x:Name="ComboBoxDateRange"
+							  Grid.Column="1"
+							  Width="140"
+							  Margin="10,0,10,0"
+							  SelectionChanged="ComboBoxDateRange_SelectionChanged"
+							  VerticalAlignment="Center"
+							  Background="{DynamicResource TextBoxBackgroundBrush}"
+							  Foreground="{DynamicResource TextBoxBackgroundBrush}"
+							  BorderBrush="{DynamicResource TextBoxBorderBrush}">
+                        <ComboBoxItem Content="Неделя (по дням)" Tag="week" IsSelected="True"/>
+                        <ComboBoxItem Content="Месяц (по дням)" Tag="month"/>
+                        <ComboBoxItem Content="Год (по месяцам)" Tag="year"/>
+                        <ComboBoxItem Content="За всё время" Tag="all"/>
+                    </ComboBox>
+
+                    <!-- Кнопка закрытия -->
+                    <Button x:Name="ButtonCloseGraph"
+                    Grid.Column="2"
+                    Content="✕"
+                    Width="26" Height="26"
+                    Padding="0"
+                    Click="ButtonCloseGraph_Click"
+                    VerticalAlignment="Center"
+                    Foreground="{StaticResource ButtonTextBrush}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#FFAAAAAA"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- Сам график -->
+                <lvc:CartesianChart x:Name="ProcessChart"
+									Height="200"
+									LegendLocation="None"
+									Hoverable="True">
+                    <lvc:CartesianChart.DataTooltip>
+                        <lvc:DefaultTooltip/>
+                    </lvc:CartesianChart.DataTooltip>
+
+                    <lvc:CartesianChart.AxisX>
+                        <lvc:Axis x:Name="AxisX"
+								  Title="Дата"
+								  Foreground="{StaticResource TextSecondaryBrush}"
+								  FontSize="10"/>
+                    </lvc:CartesianChart.AxisX>
+                    <lvc:CartesianChart.AxisY>
+                        <lvc:Axis x:Name="AxisY"
+								  Title="Мин"
+								  Foreground="{StaticResource TextSecondaryBrush}"
+								  FontSize="10"
+								  MinValue="0"/>
+                    </lvc:CartesianChart.AxisY>
+                </lvc:CartesianChart>
+
+                <!-- Статус / сообщение -->
+                <TextBlock x:Name="GraphStatus"
+						   Text=""
+						   Foreground="{StaticResource TextSecondaryBrush}"
+						   FontSize="11"
+						   TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>

@@ -1,4 +1,6 @@
 ﻿using System.Windows.Media;
+using System.Drawing;
+using Color = System.Windows.Media.Color;
 
 namespace AppsTime.Helpers
 {
@@ -84,20 +86,20 @@ namespace AppsTime.Helpers
         public static Color ListBoxText => ColorFromHex("#FFFFFFFF");
 
         /// <summary>Рамка ListBox</summary>
-        public static Color ListBoxBorder => ColorFromHex("#FF606060");
+        public static System.Windows.Media.Color ListBoxBorder => ColorFromHex("#FF606060");
 
         // ─────────────────────────────────────────────────────
         // Утилиты
         // ─────────────────────────────────────────────────────
 
         /// <summary>Конвертирует HEX строку в Color</summary>
-        public static Color ColorFromHex(string hex)
+        public static System.Windows.Media.Color ColorFromHex(string hex)
         {
-            return (Color)ColorConverter.ConvertFromString(hex);
+            return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
         }
 
         /// <summary>Создаёт SolidColorBrush из цвета</summary>
-        public static SolidColorBrush ToBrush(Color color)
+        public static SolidColorBrush ToBrush(System.Windows.Media.Color color)
         {
             return new SolidColorBrush(color);
         }

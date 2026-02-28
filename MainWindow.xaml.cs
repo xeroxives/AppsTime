@@ -1,136 +1,242 @@
-﻿using AppsTime.Data;
-using AppsTime.Helpers;
-using AppsTime.Models;
-using AppsTime.Parser;
-using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Timers;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Media;
+﻿#region USINGS
+    using System.Collections.ObjectModel;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Runtime.CompilerServices;
+    using System.Timers;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Data;
+    using System.Windows.Interop;
+    using System.Windows.Media;
+    using System.Windows.Media.Imaging;
+    using AppsTime.Data;
+    using AppsTime.Helpers;
+    using AppsTime.Models;
+    using AppsTime.Parser;
+    using System.Collections.Concurrent;
+    using Microsoft.Win32;
+    using LiveCharts;
+    using LiveCharts.Wpf;
+    using Button = System.Windows.Controls.Button;
+    using Color = System.Windows.Media.Color;
+    using ColorConverter = System.Windows.Media.ColorConverter;
+    using Label = System.Windows.Controls.Label;
+    using Point = System.Windows.Point;
+    using WpfApplication = System.Windows.Application;
+    using WpfMessageBox = System.Windows.MessageBox;
+#endregion
 
 namespace AppsTime
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        public ObservableCollection<ProcessStat> AllTimeStats { get; set; }
-            = new ObservableCollection<ProcessStat>();
-
-        private System.Timers.Timer _refreshTimer;
-        private const int RefreshIntervalMs = 1000;
-        private ICollectionView _collectionView;
-        private ProcessStat _selectedItem;
-        private CustomData _customData;
-        private CustomColors _customColors;
-		private ProcessPathData _processPaths;
-		private string _lastProcessListHash = "";
-
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
+            this.Activated += MainWindow_Activated;
 
             _customColors = CustomColorsManager.Load();
             CustomColorsManager.ApplyToResources(_customColors);
 
             _customData = CustomDataManager.Load();
-			_processPaths = ProcessPathManager.Load();
-			// 👇 Устанавливаем глобальный формат времени
-			ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
+            _processPaths = ProcessPathManager.Load();
 
-            // 👇 Применяем сохранённый язык
+            ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
+
+            // 👇 Инициализация графика
+            _drawGraph = new DrawGraph();
+            _ = _drawGraph.InitializeCacheAsync();
+
             ApplySavedLanguage();
-
             LoadAllTimeStats();
             InitializeRefreshTimer();
+            InitializeTrayIcon();
             UpdateMainWindowBackground();
-		}
 
-        // 👇 Применяем сохранённый язык при запуске
+            if (_customData?.MinimizeOnStart == true && AutoStartManager.IsEnabled())
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    MinimizeToTray();
+                    AppLogger.Log("[Startup] Приложение запущено в трей (MinimizeOnStart)");
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
+        }
+
+        #region Consts
+        private const int RefreshIntervalMs = 1000;
+        private const string TitleNameRu = "AppsTime v1.2";
+        private const string TitleNameEn = "AppsTime v1.2";
+        #endregion
+
+        #region Private
+        private readonly ConcurrentDictionary<string,System.Windows.Media.ImageSource> _iconCache = 
+                     new ConcurrentDictionary<string,System.Windows.Media.ImageSource>();
+        private System.Timers.Timer _refreshTimer;
+        private ICollectionView _collectionView;
+        private ProcessStat _selectedItem;
+        private CustomData _customData;
+        private CustomColors _customColors;
+        private ProcessPathData _processPaths;
+        private string _lastProcessListHash = "";
+        private bool _isRestoredFromTray = false;
+        private System.Windows.Forms.NotifyIcon _notifyIcon;
+        private System.Windows.Forms.ContextMenuStrip _trayMenu;
+        private DrawGraph _drawGraph;
+        private string _currentGraphProcess;
+        private string _cachedTotalTime = "00:00:00";
+        #endregion
+
+        #region Notify
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
+
+        #region Tray
+        private void InitializeTrayIcon()
+        {
+            _trayMenu = new System.Windows.Forms.ContextMenuStrip();
+
+            var restoreItem = new System.Windows.Forms.ToolStripMenuItem("Восстановить");
+            restoreItem.Click += (s, e) => RestoreFromTray();
+
+            var exitItem = new System.Windows.Forms.ToolStripMenuItem("Выйти");
+            exitItem.Click += (s, e) => ExitApplication();
+
+            _trayMenu.Items.Add(restoreItem);
+            _trayMenu.Items.Add(exitItem);
+
+            _notifyIcon = new System.Windows.Forms.NotifyIcon
+            {
+                Icon = System.Drawing.Icon.ExtractAssociatedIcon(
+                    System.Windows.Forms.Application.ExecutablePath),
+                Text = "AppsTime",
+                ContextMenuStrip = _trayMenu,
+                Visible = false
+            };
+
+            _notifyIcon.MouseDoubleClick += (s, e) =>
+            {
+                if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                {
+                    RestoreFromTray();
+                }
+            };
+        }
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            if (!_isRestoredFromTray && _notifyIcon != null && _notifyIcon.Visible)
+            {
+                RestoreFromTray();
+                _isRestoredFromTray = true;
+            }
+        }
+        private void UpdateTrayMenuLocalization()
+        {
+            if (_trayMenu == null || _trayMenu.Items.Count < 2)
+                return;
+
+            string lang = _customData.Language ?? "ru";
+            _trayMenu.Items[0].Text = (lang == "en") ? "Restore" : "Восстановить";
+            _trayMenu.Items[1].Text = (lang == "en") ? "Exit" : "Выйти";
+            _notifyIcon.Text = "AppsTime";
+        }
+        public void MinimizeToTray()
+        {
+            Hide();
+            _notifyIcon.Visible = true;
+            AppLogger.Log("[Tray] Свёрнуто в трей");
+        }
+        public void RestoreFromTray()
+        {
+            Show();
+            WindowState = WindowState.Normal;
+            Activate();
+            Focus();
+            _notifyIcon.Visible = false;
+            AppLogger.Log("[Tray] Восстановлено из трея");
+        }
+        private void ExitApplication()
+        {
+            _notifyIcon?.Dispose();
+            _refreshTimer?.Stop();
+            _refreshTimer?.Dispose();
+            AppLogger.Log("[App] Завершение работы");
+            WpfApplication.Current.Shutdown();
+        }
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            if (_customData?.MinimizeOnExit == true)
+            {
+                e.Cancel = true;
+                MinimizeToTray();
+                return;
+            }
+            ExitApplication();
+        }
+        #endregion
+
+        #region Localization
         private void ApplySavedLanguage()
         {
             string lang = _customData.Language ?? "ru";
             AppLogger.Log($"[Lang] Загружен язык: {lang}");
-
-            // Применяем локализацию ко всему UI
             ApplyLocalization();
         }
-
-        // 👇 Обновляем UI при смене языка
+        private void UpdateTotalTimeHeader(string lang)
+        {
+            if (LabelTotalTimeHeader != null)
+            {
+                LabelTotalTimeHeader.Content = (lang == "en") ? "Total Activity Time: " : "Общее время активности: ";
+            }
+        }
         public void ApplyLocalization()
         {
             string lang = _customData.Language ?? "ru";
             AppLogger.Log($"[Lang] Применён язык: {lang}");
 
-            // Обновляем заголовок окна
-            Title = (lang == "en") ? "AppsTime v1.12" : "AppsTime v1.12";
-
-            // Обновляем основные элементы UI
-            UpdateMainLabels(lang);
-
-            // Обновляем контекстное меню
-            UpdateContextMenu();
-
-            // Обновляем правую панель (метки и кнопки)
-            UpdateRightPanel(lang);
-
-            // Принудительно обновляем ListBox для перерисовки времени
-            _collectionView?.Refresh();
-        }
-
-        // 👇 Обновляет основные метки в главном окне
-        private void UpdateMainLabels(string lang)
-        {
-            // Заголовок списка
             var label = FindName("LabelAllTime") as Label;
             if (label != null)
             {
-                label.Content = (lang == "en") ? "All Time:" : "Всё время:";
+                label.Content = (lang == "en") ? "Total Activity Time: " : "Общее время активности: ";
+            }
+
+            Title = (lang == "en") ? TitleNameRu : TitleNameEn;
+            UpdateMainLabels(lang);
+            UpdateTotalTimeHeader(lang);
+            UpdateContextMenu();
+            UpdateRightPanel(lang);
+            UpdateTrayMenuLocalization();
+            UpdateGraphComboBoxLocalization(lang);
+            _collectionView?.Refresh();
+        }
+        private void UpdateGraphComboBoxLocalization(string lang)
+        {
+            if (ComboBoxDateRange == null) return;
+
+            var items = ComboBoxDateRange.Items.Cast<ComboBoxItem>().ToList();
+
+            if (items.Count >= 4)
+            {
+                items[0].Content = (lang == "en") ? "Week (by days)" : "Неделя (по дням)";
+                items[1].Content = (lang == "en") ? "Month (by days)" : "Месяц (по дням)";
+                items[2].Content = (lang == "en") ? "Year (by months)" : "Год (по месяцам)";
+                items[3].Content = (lang == "en") ? "All time" : "За всё время";
             }
         }
-
-        // 👇 Обновляет правую панель (метки и кнопки)
-        private void UpdateRightPanel(string lang)
-        {
-            // Метки
-            var lblName = FindName("LabelName") as Label;
-            var lblTime = FindName("LabelTime") as Label;
-            var lblFormatted = FindName("LabelFormatted") as Label;
-
-            if (lblName != null) lblName.Content = (lang == "en") ? "Name:" : "Имя:";
-            if (lblTime != null) lblTime.Content = (lang == "en") ? "Time (seconds):" : "Время (секунды):";
-            if (lblFormatted != null) lblFormatted.Content = (lang == "en") ? "Formatted:" : "Форматировано:";
-
-            // Кнопки
-            var btnExclude = FindName("ButtonExclude") as Button;
-            var btnSave = FindName("ButtonSave") as Button;
-            var btnSettings = FindName("ButtonSettings") as Button;
-
-            if (btnExclude != null) btnExclude.Content = (lang == "en") ? "Exclude" : "Исключить";
-            if (btnSave != null) btnSave.Content = (lang == "en") ? "Save" : "Сохранить";
-            if (btnSettings != null) btnSettings.Content = (lang == "en") ? "⚙️" : "⚙️";
-        }
-
-        // 👇 Обновляет текст пунктов контекстного меню
-        private void UpdateContextMenu()
+        private void UpdateMainLabels(string lang) { }// Пусто, если не нужно
+        private void ShowLocalizedMessageBox(string msgRu, string msgEn, string titleRu, string titleEn, MessageBoxButton buttons, MessageBoxImage icon)
         {
             string lang = _customData.Language ?? "ru";
-
-            if (ListBoxContextMenu != null)
-            {
-                UpdateMenuItem(MenuExclude, "🚫 Исключить", "🚫 Exclude");
-                UpdateMenuItem(MenuFileLocation, "📁 Расположение файла", "📁 File location");
-                UpdateMenuItem(MenuCombine, "🔗 Объединить", "🔗 Combine");
-                UpdateMenuItem(MenuSetTag, "🏷️ Установить тег", "🏷️ Set tag");
-                UpdateMenuItem(MenuResetTime, "🔄 Сбросить время", "🔄 Reset time");
-                UpdateMenuItem(MenuCopyName, "📋 Копировать имя", "📋 Copy name");
-                UpdateMenuItem(MenuCopyTime, "📋 Копировать время", "📋 Copy time");
-            }
+            string msg = (lang == "en") ? msgEn : msgRu;
+            string title = (lang == "en") ? titleEn : titleRu;
+            WpfMessageBox.Show(msg, title, buttons, icon);
         }
-
         private void UpdateMenuItem(MenuItem item, string ruText, string enText)
         {
             if (item != null)
@@ -139,22 +245,86 @@ namespace AppsTime
                 item.Header = (lang == "en") ? enText : ruText;
             }
         }
+        #endregion
+        public ObservableCollection<ProcessStat> AllTimeStats { get; set; }=new ObservableCollection<ProcessStat>();
 
-        // 👇 Helper для локализации MessageBox
-        private void ShowLocalizedMessageBox(string msgRu, string msgEn, string titleRu, string titleEn,
-            MessageBoxButton buttons, MessageBoxImage icon)
+        public string TotalActivityTime { get; private set; } = "00:00:00";
+
+        private string CalculateTotalActivityTime()
+        {
+            try
+            {
+                var stats = DataParser.GetAllTimeStats();
+                int totalSeconds = 0;
+
+                foreach (var kvp in stats)
+                {
+                    if (_customData.ExcludedProcesses.Contains(kvp.Key))
+                        continue;
+                    totalSeconds += kvp.Value;
+                }
+
+                var time = TimeSpan.FromSeconds(totalSeconds);
+                return $"{(int)time.TotalHours}:{time.Minutes:D2}:{time.Seconds:D2}";
+            }
+            catch (Exception ex)
+            {
+                AppLogger.LogError($"[TotalTime] Ошибка расчёта: {ex.Message}");
+                return "00:00:00";
+            }
+        }
+
+        private void UpdateRightPanel(string lang)
+        {
+            #region Vars
+            var lblName = FindName("LabelName") as Label;
+            var lblTime = FindName("LabelTime") as Label;
+            var btnExclude = FindName("ButtonExclude") as Button;
+            var btnSave = FindName("ButtonSave") as Button;
+            var btnSettings = FindName("ButtonSettings") as Button;
+            #endregion
+            if (lblName != null) lblName.Content = (lang == "en") ? "Name:" : "Имя:";
+            if (lblTime != null) lblTime.Content = (lang == "en") ? "Time (seconds):" : "Время (секунды):";
+            if (btnExclude != null) btnExclude.Content = (lang == "en") ? "Exclude" : "Исключить";
+            if (btnSave != null) btnSave.Content = (lang == "en") ? "Save" : "Сохранить";
+            if (btnSettings != null) btnSettings.Content = "⚙️";
+        }
+
+        private void UpdateContextMenu()
         {
             string lang = _customData.Language ?? "ru";
-            string msg = (lang == "en") ? msgEn : msgRu;
-            string title = (lang == "en") ? titleEn : titleRu;
-            MessageBox.Show(msg, title, buttons, icon);
+
+            if (ListBoxContextMenu != null)
+            {
+                UpdateMenuItem(MenuExclude, "🚫 Исключить", "🚫 Exclude");
+                UpdateMenuItem(MenuFileLocation, "📁 Расположение файла", "📁 File location");
+                UpdateMenuItem(MenuSelectPath, "🗂️ Указать путь", "🗂️ Select path");
+                UpdateMenuItem(MenuCombine, "🔗 Объединить", "🔗 Combine");
+                UpdateMenuItem(MenuSetTag, "🏷️ Установить тег", "🏷️ Set tag");
+                UpdateMenuItem(MenuResetTime, "🔄 Сбросить время", "🔄 Reset time");
+                UpdateMenuItem(MenuCopyName, "📋 Копировать имя", "📋 Copy name");
+                UpdateMenuItem(MenuCopyTime, "📋 Копировать время", "📋 Copy time");
+            }
+            UpdateSelectPathVisibility();
+        }
+
+        private void UpdateSelectPathVisibility()
+        {
+            if (MenuSelectPath == null || _selectedItem == null)
+                return;
+
+            string originalKey = _selectedItem.OriginalKey ?? _selectedItem.ProcessName;
+            string existingPath = ProcessPathManager.GetProcessPath(originalKey);
+
+            MenuSelectPath.Visibility = string.IsNullOrEmpty(existingPath)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         public void RefreshTimeFormat()
         {
             ProcessStat.GlobalTimeFormat = _customData.TimeFormat ?? "hh_mm_ss";
 
-            // Обновляем коллекцию (триггерим PropertyChanged)
             var items = AllTimeStats.ToList();
             AllTimeStats.Clear();
             foreach (var item in items)
@@ -177,8 +347,7 @@ namespace AppsTime
 
         private async void OnRefreshTimerElapsed(object sender, ElapsedEventArgs e)
         {
-            // Обновляем UI через Dispatcher (требуется для WPF)
-            await Application.Current.Dispatcher.InvokeAsync(() =>
+            await WpfApplication.Current.Dispatcher.InvokeAsync(() =>
             {
                 RefreshProcessList();
                 UpdateMainWindowBackground();
@@ -190,7 +359,6 @@ namespace AppsTime
             var stats = DataParser.GetAllTimeStats();
             string currentHash = GetStatsHash(stats);
 
-            // Обновляем только если данные изменились
             if (currentHash != _lastProcessListHash)
             {
                 _lastProcessListHash = currentHash;
@@ -200,7 +368,6 @@ namespace AppsTime
 
         private string GetStatsHash(Dictionary<string, int> stats)
         {
-            // Простая хеш-сумма для проверки изменений
             return string.Join(",", stats.Select(x => $"{x.Key}:{x.Value}").OrderBy(x => x));
         }
 
@@ -217,7 +384,6 @@ namespace AppsTime
                     new Point(0.5, 0),
                     new Point(0.5, 1));
 
-                // Находим главный Grid и применяем фон
                 if (this.Content is Grid mainGrid)
                 {
                     mainGrid.Background = gradientBrush;
@@ -229,96 +395,198 @@ namespace AppsTime
             }
         }
 
-		private void LoadAllTimeStats()
-		{
-			try
-			{
-				var selectedItem = ListBoxAllTime.SelectedItem as ProcessStat;
-				string selectedOriginalKey = selectedItem?.OriginalKey;
+        private void LoadAllTimeStats()
+        {
+            try
+            {
+                var selectedItem = ListBoxAllTime.SelectedItem as ProcessStat;
+                string selectedOriginalKey = selectedItem?.OriginalKey;
 
-				ListBoxAllTime.SelectionChanged -= ListBoxAllTime_SelectionChanged;
+                ListBoxAllTime.SelectionChanged -= ListBoxAllTime_SelectionChanged;
 
-				var newStats = new ObservableCollection<ProcessStat>();
-				var stats = DataParser.GetAllTimeStats();
+                var newStats = new ObservableCollection<ProcessStat>();
+                var stats = DataParser.GetAllTimeStats();
 
-				ProcessStat restoredItem = null;
+                ProcessStat restoredItem = null;
 
-				foreach (var kvp in stats.OrderByDescending(x => x.Value))
-				{
-					if (_customData.ExcludedProcesses.Contains(kvp.Key))
-					{
-						continue;
-					}
+                foreach (var kvp in stats.OrderByDescending(x => x.Value))
+                {
+                    if (_customData.ExcludedProcesses.Contains(kvp.Key))
+                    {
+                        continue;
+                    }
 
-					int actualTime = kvp.Value;
-					int delta = _customData.TimeOverrides.TryGetValue(kvp.Key, out var d) ? d : 0;
-					int displayTime = actualTime + delta;
+                    int actualTime = kvp.Value;
+                    int delta = _customData.TimeOverrides.TryGetValue(kvp.Key, out var d) ? d : 0;
+                    int displayTime = actualTime + delta;
 
-					var processStat = new ProcessStat
-					{
-						OriginalKey = kvp.Key,
-						ProcessName = kvp.Key,
-						TotalSeconds = displayTime
-					};
+                    var processStat = new ProcessStat
+                    {
+                        OriginalKey = kvp.Key,
+                        ProcessName = kvp.Key,
+                        TotalSeconds = displayTime
+                    };
 
-					if (_customData.NameAliases.TryGetValue(kvp.Key, out var alias))
-					{
-						processStat.ProcessName = alias;
-					}
+                    processStat.Icon = GetProcessIcon(kvp.Key);
 
-					// 👇 НОВОЕ: Сохраняем путь процесса
-					try
-					{
-						var processes = System.Diagnostics.Process.GetProcessesByName(kvp.Key);
-						if (processes.Length > 0 && processes[0].MainModule != null)
-						{
-							string processPath = processes[0].MainModule.FileName;
-							ProcessPathManager.UpdateProcessPath(kvp.Key, processPath);
-						}
-					}
-					catch (Exception ex)
-					{
-						// Нет доступа к процессу - пропускаем
-						AppLogger.Log($"[ProcessPath] Нет доступа к {kvp.Key}: {ex.Message}");
-					}
+                    if (_customData.NameAliases.TryGetValue(kvp.Key, out var alias))
+                    {
+                        processStat.ProcessName = alias;
+                    }
 
-					newStats.Add(processStat);
+                    newStats.Add(processStat);
 
-					if (selectedOriginalKey != null && processStat.OriginalKey == selectedOriginalKey)
-					{
-						restoredItem = processStat;
-					}
-					AppLogger.Log($"[Debug] {kvp.Key} | Лог: {kvp.Value}s | Дельта: {delta}s | Отображение: {displayTime}s");
-				}
+                    if (selectedOriginalKey != null && processStat.OriginalKey == selectedOriginalKey)
+                    {
+                        restoredItem = processStat;
+                    }
+                }
 
-				AllTimeStats = newStats;
-				DataContext = null;
-				DataContext = this;
+                AllTimeStats = newStats;
+                DataContext = null;
+                DataContext = this;
 
-				ListBoxAllTime.ItemsSource = AllTimeStats;
+                ListBoxAllTime.ItemsSource = AllTimeStats;
 
-				_collectionView = CollectionViewSource.GetDefaultView(AllTimeStats);
-				_collectionView.Refresh();
+                _collectionView = CollectionViewSource.GetDefaultView(AllTimeStats);
+                _collectionView.Refresh();
 
-				if (restoredItem != null)
-				{
-					ListBoxAllTime.SelectedItem = restoredItem;
-				}
+                if (restoredItem != null)
+                {
+                    ListBoxAllTime.SelectedItem = restoredItem;
+                }
 
-				ListBoxAllTime.SelectionChanged += ListBoxAllTime_SelectionChanged;
+                ListBoxAllTime.SelectionChanged += ListBoxAllTime_SelectionChanged;
 
-				AppLogger.Log($"[UI] Список обновлён ({newStats.Count} процессов)");
-			}
-			catch (Exception ex)
-			{
-				AppLogger.LogError($"[UI] Ошибка загрузки статистики: {ex.Message}");
-			}
-		}
+                UpdateTotalActivityTime();
 
-		protected override void OnClosed(EventArgs e)
+                AppLogger.Log($"[UI] Список обновлён ({newStats.Count} процессов)");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.LogError($"[UI] Ошибка загрузки статистики: {ex.Message}");
+            }
+        }
+
+        private void UpdateTotalActivityTime()
+        {
+            try
+            {
+                _cachedTotalTime = CalculateTotalActivityTime();
+
+                if (TextBlockTotalTime != null)
+                {
+                    TextBlockTotalTime.Text = _cachedTotalTime;
+                }
+
+                AppLogger.Log($"[TotalTime] Общее время: {_cachedTotalTime}");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.LogError($"[TotalTime] Ошибка обновления: {ex.Message}");
+
+                if (TextBlockTotalTime != null)
+                {
+                    TextBlockTotalTime.Text = "00:00:00";
+                }
+            }
+        }
+
+        private System.Windows.Media.ImageSource GetProcessIcon(string processName)
+        {
+            string processPath = null;
+
+            try
+            {
+                var processes = Process.GetProcessesByName(processName);
+                if (processes.Length > 0)
+                {
+                    foreach (var proc in processes)
+                    {
+                        try
+                        {
+                            if (proc.MainModule != null)
+                            {
+                                processPath = proc.MainModule.FileName;
+
+                                if (!string.IsNullOrEmpty(processPath))
+                                {
+                                    string existingPath = ProcessPathManager.GetProcessPath(processName);
+                                    if (string.IsNullOrEmpty(existingPath))
+                                    {
+                                        ProcessPathManager.UpdateProcessPath(processName, processPath);
+                                        AppLogger.Log($"[Icon] Автоматически сохранён путь: {processName}");
+                                    }
+                                }
+
+                                proc.Dispose();
+                                break;
+                            }
+                        }
+                        catch (System.ComponentModel.Win32Exception)
+                        {
+                            proc.Dispose();
+                            continue;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            proc.Dispose();
+                            continue;
+                        }
+                        catch
+                        {
+                            proc.Dispose();
+                            continue;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки доступа к процессам
+            }
+
+            if (string.IsNullOrEmpty(processPath))
+            {
+                processPath = ProcessPathManager.GetProcessPath(processName);
+            }
+
+            if (!string.IsNullOrEmpty(processPath) && System.IO.File.Exists(processPath))
+            {
+                if (_iconCache.TryGetValue(processPath, out var cachedIcon))
+                {
+                    return cachedIcon;
+                }
+
+                try
+                {
+                    var icon = System.Drawing.Icon.ExtractAssociatedIcon(processPath);
+                    if (icon != null)
+                    {
+                        var source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+                            icon.Handle,
+                            System.Windows.Int32Rect.Empty,
+                            System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+
+                        _iconCache.TryAdd(processPath, source);
+                        icon.Dispose();
+                        return source;
+                    }
+                }
+                catch
+                {
+                    // Ошибка извлечения иконки
+                }
+            }
+
+            return null;
+        }
+
+        protected override void OnClosed(EventArgs e)
         {
             _refreshTimer?.Stop();
             _refreshTimer?.Dispose();
+            _notifyIcon?.Dispose();
             AppLogger.Log("[Timer] Таймер остановлен");
             base.OnClosed(e);
         }
@@ -330,15 +598,150 @@ namespace AppsTime
                 _selectedItem = selected;
                 TextBoxProcessName.Text = selected.ProcessName;
                 TextBoxTimeSeconds.Text = selected.TotalSeconds.ToString();
-                TextBlockTimeFormatted.Text = selected.TimeFormatted;
+
+                // 👇 Показываем график для выбранного процесса
+                ShowGraphForProcess(selected.OriginalKey ?? selected.ProcessName);
             }
             else
             {
                 _selectedItem = null;
                 TextBoxProcessName.Text = "";
                 TextBoxTimeSeconds.Text = "";
-                TextBlockTimeFormatted.Text = "";
+
+                HideGraph();
             }
+
+            UpdateSelectPathVisibility();
+        }
+
+        // 👇 Методы для работы с графиком
+
+        private void ShowGraphForProcess(string processName)
+        {
+            _currentGraphProcess = processName;
+
+            AppLogger.Log($"[Graph] Запрос графика для: {processName}");
+            AppLogger.Log($"[Graph] Есть данные: {_drawGraph?.HasData(processName)}");
+
+            // 👇 Вывести все ключи в кэше для отладки
+            if (_drawGraph != null)
+            {
+                var allKeys = _drawGraph.GetAllProcessNames();
+                AppLogger.Log($"[Graph] Доступные процессы в кэше: {string.Join(", ", allKeys.Take(20))}");
+            }
+
+            if (GraphSection != null)
+            {
+                GraphSection.Visibility = Visibility.Visible;
+                //GraphTitle.Text = $"График: {processName}";
+
+                if (ComboBoxDateRange.Items.Count > 0 && ComboBoxDateRange.SelectedIndex == -1)
+                {
+                    ComboBoxDateRange.SelectedIndex = 0;
+                }
+
+                UpdateGraph();
+            }
+        }
+
+        private void HideGraph()
+        {
+            if (GraphSection != null)
+            {
+                GraphSection.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ComboBoxDateRange_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateGraph();
+        }
+
+        private void UpdateGraph()
+        {
+            if (string.IsNullOrEmpty(_currentGraphProcess) || ProcessChart == null || _drawGraph == null)
+                return;
+
+            // Определяем выбранный диапазон
+            DrawGraph.DateRange range = DrawGraph.DateRange.All;
+            if (ComboBoxDateRange.SelectedItem is ComboBoxItem comboItem)
+            {
+                string tag = comboItem.Tag?.ToString();
+                switch (tag)
+                {
+                    case "week": range = DrawGraph.DateRange.Week; break;
+                    case "month": range = DrawGraph.DateRange.Month; break;
+                    case "year": range = DrawGraph.DateRange.Year; break;
+                    case "all": range = DrawGraph.DateRange.All; break;
+                }
+            }
+
+            // Строим график
+            var series = _drawGraph.BuildChart(_currentGraphProcess, range, out var labels);
+
+            if (series.Count == 0 || labels.Count == 0)
+            {
+                ProcessChart.Series = new SeriesCollection();
+                GraphStatus.Text = GetText("Нет данных за выбранный период", "No data for selected period");
+                GraphStatus.Visibility = Visibility.Visible;
+                return;
+            }
+            #region Custom_Tooltip
+            ProcessChart.DataTooltip = new LiveCharts.Wpf.DefaultTooltip
+            {
+                ShowSeries = false
+            };
+            //var tooltip = new LiveCharts.Wpf.DefaultTooltip
+            //{
+            //    SelectionMode = LiveCharts.SelectionMode.Single,
+            //    ShowSeries = false
+            //};
+            //tooltip.DataPointHovered += (s, e) =>
+            //{
+            //    if (e.ChartPoint != null && e.ChartPoint.SeriesView != null)
+            //    {
+            //        var lineSeries = e.ChartPoint.SeriesView as LiveCharts.Wpf.LineSeries;
+            //        if (lineSeries != null)
+            //        {
+            //            // Форматируем значение
+            //            var minutes = e.ChartPoint.Y;
+            //            var dateTime = labels[e.ChartPoint.Index];
+
+            //            // Добавляем год к дате
+            //            string formattedDate = AddYearToDate(dateTime, range);
+
+            //            // Устанавливаем кастомный текст
+            //            lineSeries.DataLabels = true;
+            //            lineSeries.LabelPoint = point => $"{formattedDate}\n{minutes:F2} мин";
+            //        }
+            //    }
+            //};
+            
+            #endregion
+
+            // Применяем данные к графику
+            ProcessChart.Series = series;
+
+            // Настраиваем ось X
+            AxisX.Labels = labels.ToArray();
+            AxisX.Title = range == DrawGraph.DateRange.Year
+                ? GetText("Месяц", "Month")
+                : GetText("Дата", "Date");
+
+            // Настраиваем ось Y
+            var maxVal = series[0].Values.Cast<double>().Max();
+            AxisY.MaxValue = Math.Ceiling(maxVal / 50) * 50;
+            AxisY.Title = GetText("Мин", "Min");
+
+            // Статус
+            GraphStatus.Text = $"{GetText("Показано", "Shown")}: {labels.Count} {GetText("точек", "points")} | " +
+                               $"{GetText("Всего", "Total")}: {series[0].Values.Cast<double>().Sum():F0} {GetText("мин", "min")}";
+            GraphStatus.Visibility = Visibility.Visible;
+        }
+        private void ButtonCloseGraph_Click(object sender, RoutedEventArgs e)
+        {
+            HideGraph();
+            ListBoxAllTime.SelectedItem = null;
         }
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
@@ -363,10 +766,8 @@ namespace AppsTime
                 return;
             }
 
-            // 👇 Используем OriginalKey (оригинальное имя из лога)
             string originalKey = _selectedItem.OriginalKey;
 
-            // Если OriginalKey не установлен, пытаемся найти через алиасы
             if (string.IsNullOrEmpty(originalKey))
             {
                 originalKey = _selectedItem.ProcessName;
@@ -380,33 +781,24 @@ namespace AppsTime
                 }
             }
 
-            // Парсим введённое время
             int userInputTime = 0;
             if (int.TryParse(TextBoxTimeSeconds.Text, out int parsedTime))
             {
                 userInputTime = Math.Max(0, parsedTime);
             }
 
-            // 👇 Получаем ФАКТИЧЕСКОЕ время из лога (не из UI!)
             var stats = DataParser.GetAllTimeStats();
             int actualTimeFromLog = stats.TryGetValue(originalKey, out var t) ? t : 0;
-
-            // 👇 Вычисляем дельту: введённое - фактическое
             int delta = userInputTime - actualTimeFromLog;
 
-            // Сохраняем алиас (если изменили имя)
             if (newName != _selectedItem.ProcessName)
             {
                 _customData.NameAliases[originalKey] = newName;
             }
 
-            // 👇 Сохраняем ДЕЛЬТУ по оригинальному ключу
             _customData.TimeOverrides[originalKey] = delta;
-
-            // Автосохранение
             CustomDataManager.Save(_customData);
 
-            // 👇 МГНОВЕННОЕ обновление списка
             Dispatcher.Invoke(() => LoadAllTimeStats(),
                 System.Windows.Threading.DispatcherPriority.Render);
 
@@ -430,11 +822,10 @@ namespace AppsTime
                 : $"Исключить процесс \"{_selectedItem.ProcessName}\"?";
             string title = (lang == "en") ? "Confirm" : "Подтверждение";
 
-            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = WpfMessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
-                // 👇 Используем OriginalKey
                 string originalKey = _selectedItem.OriginalKey;
 
                 if (string.IsNullOrEmpty(originalKey))
@@ -456,7 +847,6 @@ namespace AppsTime
                 ListBoxAllTime.SelectedItem = null;
                 TextBoxProcessName.Text = "";
                 TextBoxTimeSeconds.Text = "";
-                TextBlockTimeFormatted.Text = "";
                 _selectedItem = null;
 
                 CustomDataManager.Save(_customData);
@@ -477,28 +867,23 @@ namespace AppsTime
 
         private void ButtonSettings_Click(object sender, RoutedEventArgs e)
         {
-            // 👇 Сохраняем текущий язык для сравнения
             string oldLanguage = _customData.Language ?? "ru";
 
             var settingsWindow = new SettingsWindow(this, _customData, _customColors);
             settingsWindow.ShowDialog();
 
-            // 👈 Получаем обновлённые цвета из SettingsWindow
             if (settingsWindow.UpdatedColors != null)
             {
                 _customColors = settingsWindow.UpdatedColors;
             }
 
-            // 👇 Если язык изменился — применяем локализацию
             string newLanguage = _customData.Language ?? "ru";
             if (newLanguage != oldLanguage)
             {
                 ApplyLocalization();
             }
 
-            // Обновляем фон главного окна
             UpdateMainWindowBackground();
-
             LoadAllTimeStats();
         }
 
@@ -509,99 +894,147 @@ namespace AppsTime
             if (_selectedItem == null) return;
             ButtonExclude_Click(sender, e);
         }
-		// 👇 ОБНОВЛЁННЫЙ МЕТОД: Открыть расположение файла (с приоритетом)
-		private void MenuFileLocation_Click(object sender, RoutedEventArgs e)
-		{
-			if (_selectedItem == null)
-			{
-				ShowLocalizedMessageBox(
-					"Выберите процесс!", "Select a process!",
-					"Внимание", "Warning",
-					MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
-			}
 
-			try
-			{
-				string processName = _selectedItem.ProcessName;
-				string originalKey = _selectedItem.OriginalKey ?? processName;
-				string processPath = null;
+        private void MenuFileLocation_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null)
+            {
+                ShowLocalizedMessageBox(
+                    "Выберите процесс!", "Select a process!",
+                    "Внимание", "Warning",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-				// 👇 ПРИОРИТЕТ 1: Пробуем получить путь от запущенного процесса
-				try
-				{
-					var processes = System.Diagnostics.Process.GetProcessesByName(originalKey);
-					if (processes.Length > 0 && processes[0].MainModule != null)
-					{
-						processPath = processes[0].MainModule.FileName;
-						AppLogger.Log($"[Menu] Получен путь от процесса: {processPath}");
-					}
-				}
-				catch (Exception ex)
-				{
-					AppLogger.Log($"[Menu] Нет доступа к процессу {originalKey}: {ex.Message}");
-				}
+            try
+            {
+                string processName = _selectedItem.ProcessName;
+                string originalKey = _selectedItem.OriginalKey ?? processName;
+                string processPath = null;
 
-				// 👇 ПРИОРИТЕТ 2: Если процесс не запущен - берём из paths.json
-				if (string.IsNullOrEmpty(processPath))
-				{
-					processPath = ProcessPathManager.GetProcessPath(originalKey);
-					if (!string.IsNullOrEmpty(processPath))
-					{
-						AppLogger.Log($"[Menu] Получен путь из paths.json: {processPath}");
-					}
-				}
+                try
+                {
+                    var processes = Process.GetProcessesByName(originalKey);
+                    if (processes.Length > 0 && processes[0].MainModule != null)
+                    {
+                        processPath = processes[0].MainModule.FileName;
+                        AppLogger.Log($"[Menu] Получен путь от процесса: {processPath}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log($"[Menu] Нет доступа к процессу {originalKey}: {ex.Message}");
+                }
 
-				// 👇 Открываем проводник
-				if (!string.IsNullOrEmpty(processPath) && System.IO.File.Exists(processPath))
-				{
-					System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{processPath}\"");
-					AppLogger.Log($"[Menu] Открыт проводник с выделением: {processPath}");
-				}
-				else if (!string.IsNullOrEmpty(processPath))
-				{
-					// Файл не найден, но путь есть - открываем папку
-					string directory = System.IO.Path.GetDirectoryName(processPath);
-					if (!string.IsNullOrEmpty(directory) && System.IO.Directory.Exists(directory))
-					{
-						System.Diagnostics.Process.Start("explorer.exe", directory);
-						AppLogger.Log($"[Menu] Открыта папка (файл не найден): {directory}");
+                if (string.IsNullOrEmpty(processPath))
+                {
+                    processPath = ProcessPathManager.GetProcessPath(originalKey);
+                    if (!string.IsNullOrEmpty(processPath))
+                    {
+                        AppLogger.Log($"[Menu] Получен путь из paths.json: {processPath}");
+                    }
+                }
 
-						ShowLocalizedMessageBox(
-							"Файл не найден по сохранённому пути.\n\nОткрыта папка из last known location.",
-							"File not found at saved path.\n\nOpened folder from last known location.",
-							"Предупреждение", "Warning",
-							MessageBoxButton.OK, MessageBoxImage.Warning);
-					}
-					else
-					{
-						ShowLocalizedMessageBox(
-							"Путь к файлу не найден.\n\nПроцесс никогда не был запущен или путь устарел.",
-							"Process path not found.\n\nProcess was never run or path is outdated.",
-							"Ошибка", "Error",
-							MessageBoxButton.OK, MessageBoxImage.Error);
-					}
-				}
-				else
-				{
-					ShowLocalizedMessageBox(
-						"Путь к файлу не найден.\n\nПроцесс никогда не был запущен во время работы программы.",
-						"Process path not found.\n\nProcess was never run while this app was active.",
-						"Ошибка", "Error",
-						MessageBoxButton.OK, MessageBoxImage.Error);
-				}
-			}
-			catch (Exception ex)
-			{
-				AppLogger.LogError($"[Menu] Ошибка открытия проводника: {ex.Message}");
-				ShowLocalizedMessageBox(
-					$"Ошибка: {ex.Message}",
-					$"Error: {ex.Message}",
-					"Ошибка", "Error",
-					MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
-		private void MenuCombine_Click(object sender, RoutedEventArgs e)
+                if (!string.IsNullOrEmpty(processPath) && System.IO.File.Exists(processPath))
+                {
+                    Process.Start("explorer.exe", $"/select,\"{processPath}\"");
+                    AppLogger.Log($"[Menu] Открыт проводник с выделением: {processPath}");
+                }
+                else if (!string.IsNullOrEmpty(processPath))
+                {
+                    string directory = System.IO.Path.GetDirectoryName(processPath);
+                    if (!string.IsNullOrEmpty(directory) && System.IO.Directory.Exists(directory))
+                    {
+                        Process.Start("explorer.exe", directory);
+                        AppLogger.Log($"[Menu] Открыта папка (файл не найден): {directory}");
+
+                        ShowLocalizedMessageBox(
+                            "Файл не найден по сохранённому пути.\n\nОткрыта папка из last known location.",
+                            "File not found at saved path.\n\nOpened folder from last known location.",
+                            "Предупреждение", "Warning",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        ShowLocalizedMessageBox(
+                            "Путь к файлу не найден.\n\nПроцесс никогда не был запущен или путь устарел.",
+                            "Process path not found.\n\nProcess was never run or path is outdated.",
+                            "Ошибка", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    ShowLocalizedMessageBox(
+                        "Путь к файлу не найден.\n\nПроцесс никогда не был запущен во время работы программы.",
+                        "Process path not found.\n\nProcess was never run while this app was active.",
+                        "Ошибка", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.LogError($"[Menu] Ошибка открытия проводника: {ex.Message}");
+                ShowLocalizedMessageBox(
+                    $"Ошибка: {ex.Message}",
+                    $"Error: {ex.Message}",
+                    "Ошибка", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void MenuSelectPath_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedItem == null)
+            {
+                ShowLocalizedMessageBox(
+                    "Выберите процесс!", "Select a process!",
+                    "Внимание", "Warning",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string originalKey = _selectedItem.OriginalKey ?? _selectedItem.ProcessName;
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = (_customData.Language == "en") ? "Select executable file" : "Выберите исполняемый файл",
+                Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
+                CheckFileExists = true,
+                CheckPathExists = true
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string selectedPath = openFileDialog.FileName;
+
+                if (ProcessPathManager.SaveUserSelectedPath(originalKey, selectedPath))
+                {
+                    var selectedItem = AllTimeStats.FirstOrDefault(x => x.OriginalKey == originalKey);
+                    if (selectedItem != null)
+                    {
+                        selectedItem.Icon = GetProcessIcon(originalKey);
+                    }
+
+                    if (MenuSelectPath != null)
+                    {
+                        MenuSelectPath.Visibility = Visibility.Collapsed;
+                    }
+
+                    AppLogger.Log($"[Menu] Пользователь выбрал путь: {originalKey} → {selectedPath}");
+                }
+                else
+                {
+                    ShowLocalizedMessageBox(
+                        "Не удалось сохранить путь.\n\nПроверьте права доступа к файлу.",
+                        "Failed to save path.\n\nCheck file access permissions.",
+                        "Ошибка", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void MenuCombine_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedItem == null) return;
             string lang = _customData.Language ?? "ru";
@@ -610,7 +1043,7 @@ namespace AppsTime
                 : $"Объединить \"{_selectedItem.ProcessName}\" с...\n\n(Функционал в разработке)";
             string title = (lang == "en") ? "Combine" : "Объединить";
 
-            MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
+            WpfMessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuSetTag_Click(object sender, RoutedEventArgs e)
@@ -622,7 +1055,7 @@ namespace AppsTime
                 : $"Установить тег для \"{_selectedItem.ProcessName}\"\n\n(Функционал в разработке)";
             string title = (lang == "en") ? "Tag" : "Тег";
 
-            MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
+            WpfMessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuResetTime_Click(object sender, RoutedEventArgs e)
@@ -635,7 +1068,7 @@ namespace AppsTime
                 : $"Сбросить время для \"{_selectedItem.ProcessName}\"?\n\nЭто удалит переопределение времени из настроек.";
             string title = (lang == "en") ? "Reset time" : "Сброс времени";
 
-            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = WpfMessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -685,6 +1118,15 @@ namespace AppsTime
                     "Ошибка", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private string GetText(string ru, string en)
+        {
+            return (_customData.Language ?? "ru") == "en" ? en : ru;
         }
 
         #endregion
