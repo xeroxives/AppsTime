@@ -1,10 +1,12 @@
 ﻿using AppsTime.Helpers;
 using AppsTime.Models;
-using System;
 using System.IO;
 using System.Text.Json;
-using System.Windows;
 using System.Windows.Media;
+
+using Application = System.Windows.Application;
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace AppsTime.Data
 {

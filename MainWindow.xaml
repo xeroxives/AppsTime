@@ -3,46 +3,275 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:AppsTime"
         xmlns:behaviors="clr-namespace:AppsTime.Behaviors"
         mc:Ignorable="d"
-        Title="AppsTime" Height="450" Width="800" ResizeMode="CanMinimize">
+        Height="540" Width="1000" 
+        ResizeMode="CanMinimize"
+        Closing="MainWindow_Closing">
 
 	<Grid Background="{DynamicResource WindowBackgroundStartBrush}">
 
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="2*"/>
-			<ColumnDefinition Width="315"/>
-			<ColumnDefinition Width="0.6*"/>
-			<ColumnDefinition Width="0.6*"/>
+			<ColumnDefinition Width="21.228"/>
+			<ColumnDefinition Width="338.772"/>
+			<ColumnDefinition Width="575"/>
+			<ColumnDefinition Width="60"/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
-			<RowDefinition/>
-			<RowDefinition/>
-			<RowDefinition/>
+			<RowDefinition Height="17*"/>
+			<RowDefinition Height="18*"/>
+			<RowDefinition Height="35*"/>
+			<RowDefinition Height="35*"/>
+			<RowDefinition Height="35*"/>
+			<RowDefinition Height="35*"/>
 		</Grid.RowDefinitions>
 
-		<!-- Заголовок -->
-		<Label x:Name="LabelAllTime"
-               Content="Всё время:" 
-               Foreground="{StaticResource TextPrimaryBrush}" 
-               Margin="20,0,0,0" FontWeight="Bold"/>
+		<Grid Grid.Column="0" VerticalAlignment="Top"
+			  Grid.Row="0"
+			  Margin="10,7,20,0"
+			  Panel.ZIndex="100"
+			  Background="Transparent"
+			  Height="25" Grid.ColumnSpan="2">
+
+			<Grid.ColumnDefinitions>
+				<!-- 👇 Колонка 0: Иконка (фиксированный размер) -->
+				<ColumnDefinition Width="34"/>
+				<!-- 👇 Колонка 1: Отступ между иконкой и текстом -->
+				<ColumnDefinition Width="8"/>
+				<!-- 👇 Колонка 2: Текст заголовка (по размеру контента) -->
+				<ColumnDefinition Width="Auto"/>
+				<!-- 👇 Колонка 3: Время (занимает всё оставшееся место) -->
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<!--Stretch="Uniform"-->
+			<CheckBox VerticalAlignment="Center"
+				HorizontalAlignment="Center"
+				Grid.ColumnSpan="2"
+				x:Name="CheckBoxTimeMode"
+				Checked="CheckBoxTimeMode_Checked"
+				Unchecked="CheckBoxTimeMode_Unchecked">
+				<CheckBox.Style>
+					<Style TargetType="CheckBox">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="CheckBox">
+									<Grid>
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="*"/>
+										</Grid.ColumnDefinitions>
+
+										<!-- Переключатель -->
+										<Border x:Name="toggleBorder"
+                                            Grid.Column="0"
+                                            Width="38" Height="20"
+                                            Background="#FFB0B0B0"
+                                            CornerRadius="11"
+                                            Margin="0,0,10,0"
+                                            Opacity="1.0">
+											<Border x:Name="toggleCircle"
+                                                Width="16" Height="16"
+                                                Background="White"
+                                                CornerRadius="9"
+                                                HorizontalAlignment="Left"
+                                                Margin="2,2,0,2">
+												<Border.Effect>
+													<DropShadowEffect BlurRadius="4" 
+                                                                  ShadowDepth="1" 
+                                                                  Opacity="0.3"/>
+												</Border.Effect>
+												<Border.RenderTransform>
+													<TranslateTransform X="0"/>
+												</Border.RenderTransform>
+											</Border>
+										</Border>
+
+										<!-- Текст -->
+										<ContentPresenter Grid.Column="1"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}"/>
+									</Grid>
+
+									<ControlTemplate.Triggers>
+										<!-- Когда CheckBox включен -->
+										<Trigger Property="IsChecked" Value="True">
+											<Trigger.EnterActions>
+												<BeginStoryboard>
+													<Storyboard>
+														<ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FFB0B0B0" To="#FF0078D4"
+                                                        Duration="0:0:0.25">
+															<ColorAnimation.EasingFunction>
+																<CubicEase EasingMode="EaseOut"/>
+															</ColorAnimation.EasingFunction>
+														</ColorAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="0" To="18"
+                                                        Duration="0:0:0.25">
+															<DoubleAnimation.EasingFunction>
+																<CubicEase EasingMode="EaseOut"/>
+															</DoubleAnimation.EasingFunction>
+														</DoubleAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.3" To="0.5"
+                                                        Duration="0:0:0.25"/>
+													</Storyboard>
+												</BeginStoryboard>
+											</Trigger.EnterActions>
+
+											<Trigger.ExitActions>
+												<BeginStoryboard>
+													<Storyboard>
+														<ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FF0078D4" To="#FFB0B0B0"
+                                                        Duration="0:0:0.25">
+															<ColorAnimation.EasingFunction>
+																<CubicEase EasingMode="EaseOut"/>
+															</ColorAnimation.EasingFunction>
+														</ColorAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="22" To="0"
+                                                        Duration="0:0:0.25">
+															<DoubleAnimation.EasingFunction>
+																<CubicEase EasingMode="EaseOut"/>
+															</DoubleAnimation.EasingFunction>
+														</DoubleAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.5" To="0.3"
+                                                        Duration="0:0:0.25"/>
+													</Storyboard>
+												</BeginStoryboard>
+											</Trigger.ExitActions>
+										</Trigger>
+
+										<!-- При наведении мыши -->
+										<Trigger Property="IsMouseOver" Value="True">
+											<Trigger.EnterActions>
+												<BeginStoryboard>
+													<Storyboard>
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.85"
+                                                        Duration="0:0:0.15">
+															<DoubleAnimation.EasingFunction>
+																<QuadraticEase EasingMode="EaseOut"/>
+															</DoubleAnimation.EasingFunction>
+														</DoubleAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.5"
+                                                        Duration="0:0:0.15"/>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="6"
+                                                        Duration="0:0:0.15"/>
+													</Storyboard>
+												</BeginStoryboard>
+											</Trigger.EnterActions>
+
+											<Trigger.ExitActions>
+												<BeginStoryboard>
+													<Storyboard>
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="1.0"
+                                                        Duration="0:0:0.15">
+															<DoubleAnimation.EasingFunction>
+																<QuadraticEase EasingMode="EaseOut"/>
+															</DoubleAnimation.EasingFunction>
+														</DoubleAnimation>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.3"
+                                                        Duration="0:0:0.15"/>
+
+														<DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="4"
+                                                        Duration="0:0:0.15"/>
+													</Storyboard>
+												</BeginStoryboard>
+											</Trigger.ExitActions>
+										</Trigger>
+
+										<!-- При нажатии -->
+										<Trigger Property="IsPressed" Value="True">
+											<Setter TargetName="toggleBorder" Property="Opacity" Value="0.7"/>
+										</Trigger>
+									</ControlTemplate.Triggers>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+				</CheckBox.Style>
+			</CheckBox>
+			<!-- Текст заголовка (после иконки) -->
+			<Label x:Name="LabelTotalTimeHeader"
+				   Grid.Column="2"
+				   Content="Всё время: " 
+				   Foreground="{StaticResource TextPrimaryBrush}" 
+				   FontWeight="Bold"
+				   Padding="0" Margin="0"
+				   VerticalAlignment="Center"/>
+
+			<!-- Время (справа, прижато к правому краю) -->
+			<TextBlock x:Name="TextBlockTotalTime"
+					   Grid.Column="3"
+					   Text="00:00:00"
+					   VerticalAlignment="Center"
+					   HorizontalAlignment="Right"
+					   TextAlignment="Right"
+					   FontSize="14"
+					   FontWeight="Bold"
+					   Margin="10,0,10,0">
+				<TextBlock.Foreground>
+					<SolidColorBrush Color="#FF8C8C8C"/>
+				</TextBlock.Foreground>
+			</TextBlock>
+		</Grid>
 
 		<!-- ListBox -->
 		<ListBox x:Name="ListBoxAllTime" 
-                 Grid.Column="0" 
-                 Grid.Row="0" 
-                 Grid.RowSpan="3"
-                 Margin="20,30,20,10"
-                 ItemsSource="{Binding AllTimeStats}"
-                 Background="Transparent"
-                 Foreground="{StaticResource ListBoxTextBrush}"
-                 BorderThickness="0"
-                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 behaviors:SmoothScrollBehavior.EnableSmoothScroll="True"
-                 SelectionChanged="ListBoxAllTime_SelectionChanged"
-                 HorizontalContentAlignment="Stretch">
+				Grid.Column="0" 
+				Grid.Row="0" 
+				Grid.RowSpan="6"
+				Margin="15,30,15,10"
+				ItemsSource="{Binding AllTimeStats}"
+				Background="Transparent"
+				Foreground="{StaticResource ListBoxTextBrush}"
+				BorderThickness="0"
+				ScrollViewer.VerticalScrollBarVisibility="Hidden"
+				ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+				behaviors:SmoothScrollBehavior.EnableSmoothScroll="True"
+				SelectionChanged="ListBoxAllTime_SelectionChanged"
+				HorizontalContentAlignment="Stretch" Grid.ColumnSpan="2">
 			<ListBox.ContextMenu>
 				<ContextMenu x:Name="ListBoxContextMenu"
                  Background="{StaticResource PanelBackgroundBrush}"
@@ -53,7 +282,7 @@
                  Margin="0">
 
 					<ContextMenu.Resources>
-						<!-- 👇 Стиль для самого ContextMenu -->
+						<!-- Стиль для ContextMenu -->
 						<Style TargetType="ContextMenu">
 							<Setter Property="Padding" Value="0"/>
 							<Setter Property="Margin" Value="0"/>
@@ -73,7 +302,7 @@
 							</Setter>
 						</Style>
 
-						<!-- 👇 Стиль для MenuItem -->
+						<!-- Стиль для MenuItem -->
 						<Style TargetType="MenuItem">
 							<Setter Property="Padding" Value="10,5,20,5"/>
 							<Setter Property="Margin" Value="0"/>
@@ -99,7 +328,7 @@
 							</Setter>
 						</Style>
 
-						<!-- 👇 Стиль для Separator -->
+						<!-- Стиль для Separator -->
 						<Style TargetType="Separator">
 							<Setter Property="Margin" Value="0,2,0,2"/>
 							<Setter Property="Background" Value="{StaticResource ListBoxBorderBrush}"/>
@@ -111,24 +340,34 @@
                   Header="🚫 Исключить"
                   Click="MenuExclude_Click"/>
 
-                    <Separator/>
-                    <MenuItem x:Name="MenuFileLocation"
-							  Header="📁 Расположение файла"
-							  Click="MenuFileLocation_Click"/>
+					<!-- Закрепить/Открепить -->
+					<MenuItem x:Name="MenuPin"
+                  Header="📌 Закрепить"
+                  Click="MenuPin_Click"/>
 
-                    <Separator/>
+					<Separator/>
 
-                    <!-- Объединить -->
+					<!-- Расположение файла -->
+					<MenuItem x:Name="MenuFileLocation"
+                  Header="📁 Расположение файла"
+                  Click="MenuFileLocation_Click"/>
+					<MenuItem x:Name="MenuSelectPath"
+                  Header="🗂️ Указать путь"
+                  Click="MenuSelectPath_Click"/>
+
+					<Separator/>
+
+					<!-- Объединить -->
 					<MenuItem x:Name="MenuCombine"
-                              Header="🔗 Объединить"
-                              Click="MenuCombine_Click"
-                              IsEnabled="False"/>
+                  Header="🔗 Объединить"
+                  Click="MenuCombine_Click"
+                  IsEnabled="False"/>
 
 					<!-- Установить тег -->
 					<MenuItem x:Name="MenuSetTag"
-                              Header="🏷️ Установить тег"
-                              Click="MenuSetTag_Click"
-                              IsEnabled="False"/>
+                  Header="🏷️ Установить тег"
+                  Click="MenuSetTag_Click"
+                  IsEnabled="False"/>
 
 					<Separator/>
 
@@ -155,7 +394,15 @@
 				<Style TargetType="ListBoxItem">
 					<Setter Property="Foreground" Value="{StaticResource ListBoxTextBrush}"/>
 					<Setter Property="Background" Value="Transparent"/>
+
+					<!-- 👇 Отключаем выделение для разделителей -->
 					<Style.Triggers>
+						<DataTrigger Binding="{Binding IsSeparator}" Value="True">
+							<Setter Property="IsHitTestVisible" Value="False"/>
+							<Setter Property="Focusable" Value="False"/>
+							<Setter Property="IsEnabled" Value="False"/>
+						</DataTrigger>
+
 						<Trigger Property="IsSelected" Value="True">
 							<Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
 						</Trigger>
@@ -165,47 +412,70 @@
 					</Style.Triggers>
 				</Style>
 			</ListBox.ItemContainerStyle>
-
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="Auto"/>
-						</Grid.ColumnDefinitions>
+					<Grid Margin="0,2">
+						<!-- 👇 Разделитель (линия) -->
+						<Border Height="1" 
+                    Background="{StaticResource ListBoxBorderBrush}"
+                    Margin="0,10"
+                    Visibility="Collapsed">
+							<Border.Style>
+								<Style TargetType="Border">
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding IsSeparator}" Value="True">
+											<Setter Property="Visibility" Value="Visible"/>
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</Border.Style>
+						</Border>
 
-						<!-- Имя процесса (слева) - цвет зависит от статуса -->
-						<TextBlock Grid.Column="0" 
-                       Text="{Binding ProcessName}" 
-                       VerticalAlignment="Center"
-                       FontSize="14"
-                       Margin="5,0">
-							<TextBlock.Foreground>
-								<MultiBinding Converter="{StaticResource IsRunningColorConverter}">
-									<!-- Имя процесса -->
-									<Binding Path="ProcessName"/>
-									<!-- Цвет для запущенных (StaticResource!) -->
-									<Binding Source="{StaticResource RunningProcessTextColorBrush}"/>
-									<!-- Цвет для остановленных (StaticResource!) -->
-									<Binding Source="{StaticResource TextPrimaryBrush}"/>
-								</MultiBinding>
-							</TextBlock.Foreground>
-						</TextBlock>
+						<!-- 👇 Обычный элемент процесса -->
+						<Grid Margin="0,4">
+							<Grid.Style>
+								<Style TargetType="Grid">
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding IsSeparator}" Value="True">
+											<Setter Property="Visibility" Value="Collapsed"/>
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</Grid.Style>
 
-						<!-- Время (справа) -->
-						<TextBlock Grid.Column="1" 
-                       Text="{Binding TimeFormatted}" 
-                       VerticalAlignment="Center"
-                       FontSize="14"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Margin="10,0"/>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+
+							<Image Grid.Column="0"
+                       Source="{Binding Icon}"
+                       Width="16" Height="16"
+                       Margin="0,0,10,0"
+                       VerticalAlignment="Center"/>
+
+							<TextBlock Grid.Column="1" 
+                           Text="{Binding ProcessName}" 
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           Margin="5,0"/>
+
+							<TextBlock Grid.Column="2" 
+                           Text="{Binding TimeFormatted}" 
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           FontSize="14"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="10,0"/>
+						</Grid>
 					</Grid>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
 		</ListBox>
 
 		<!-- Правая панель -->
-		<StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="20,10,20,10">
+		<StackPanel Grid.Column="2" Grid.RowSpan="3" Margin="30,10,210,10">
 
 			<StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,0">
 				<Label x:Name="LabelName"
@@ -213,7 +483,7 @@
                        Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
 				<TextBox x:Name="TextBoxProcessName" 
                          Margin="10,0,10,0" 
-                         Width="200" 
+                         Width="265" 
                          Height="30" 
                          VerticalAlignment="Center" 
                          FontSize="14"
@@ -237,21 +507,10 @@
                          Background="{StaticResource TextBoxBackgroundBrush}"
                          Foreground="{StaticResource TextBoxTextBrush}"
                          BorderBrush="{StaticResource TextBoxBorderBrush}"
-                         HorizontalAlignment="Stretch"/>
+                         HorizontalAlignment="Stretch" IsReadOnly="True" Cursor="Arrow"/>
 			</StackPanel>
 
-			<StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Center" Margin="10,0,10,0">
-				<Label x:Name="LabelFormatted"
-                       Content="Форматировано:" VerticalAlignment="Center" 
-                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-				<TextBlock x:Name="TextBlockTimeFormatted" 
-                           Margin="10,0,10,0" 
-                           VerticalAlignment="Center" 
-                           FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"/>
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center" Margin="10,0,10,10">
+			<StackPanel Orientation="Horizontal" Height="50" Margin="10,0,10,10">
 				<Button x:Name="ButtonExclude" 
                         Click="ButtonExclude_Click"
                         Width="100" 
@@ -307,38 +566,176 @@
 				</Button>
 			</StackPanel>
 		</StackPanel>
+        <StackPanel Orientation="Vertical" Grid.RowSpan="2" Grid.Column="3">
+            <Button 
+				x:Name="ButtonSettings"
+				Content="⚙️"
+				Height="35" Width="35"
+				Margin="0,5,20,0"
+				Foreground="{StaticResource ButtonTextBrush}"
+				BorderThickness="0" 
+				FontSize="16"
+				Click="ButtonSettings_Click"
+				Cursor="Hand" 
+				Background="#00FFFFFF" 
+				HorizontalAlignment="Right" 
+				VerticalAlignment="Top">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#00FFFFFF"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#FFAAAAAA"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Grid.Column="3"
+				x:Name="ButtonReload"
+				Content="🔄"
+				Height="35" Width="35"
+				Margin="0,0,20,0"
+				Foreground="{StaticResource ButtonTextBrush}"
+				BorderThickness="0" 
+				FontSize="16"
+				Click="ButtonReload_Click"
+				Cursor="Hand" 
+				Background="#00FFFFFF" 
+				HorizontalAlignment="Right" 
+				VerticalAlignment="Top">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#00FFFFFF"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#FFAAAAAA"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
 
-		<Button Grid.Column="3"
-        x:Name="ButtonSettings"
-        Content="⚙️"
-        Height="35" Width="35"
-        Margin="0,10,10,0"
-        Foreground="{StaticResource ButtonTextBrush}"
-        BorderThickness="0" 
-        FontSize="16"
-        Click="ButtonSettings_Click"
-        Cursor="Hand" 
-        Background="#00288CC8" 
-        HorizontalAlignment="Right" 
-        VerticalAlignment="Top">
-			<Button.Style>
-				<Style TargetType="Button">
-					<!-- Фиксируем фон (не меняется) -->
-					<Setter Property="Background" Value="#00FFFFFF"/>
+		<!-- 👇 Секция графика -->
+		<Border x:Name="GraphSection"
+				Grid.Column="2" 
+				Grid.Row="3" 
+				Grid.ColumnSpan="2" 
+				Grid.RowSpan="3"
+				Margin="10,0,20,10"
+				Background="{StaticResource PanelBackgroundBrush}"
+				BorderBrush="{StaticResource ListBoxBorderBrush}"
+				BorderThickness="1"
+				CornerRadius="8"
+				Padding="15"
+				Visibility="Collapsed">
 
-					<Style.Triggers>
-						<!-- 👇 При наведении меняем ТОЛЬКО цвет текста -->
-						<Trigger Property="IsMouseOver" Value="True">
-							<Setter Property="Foreground" Value="#FFAAAAAA"/>
-						</Trigger>
+			<StackPanel>
+				<!-- Заголовок + управление -->
+				<Grid Margin="0,0,0,5">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
 
-						<!-- 👇 При нажатии меняем ТОЛЬКО цвет текста -->
-						<Trigger Property="IsPressed" Value="True">
-							<Setter Property="Foreground" Value="#FFFFFFFF"/>
-						</Trigger>
-					</Style.Triggers>
-				</Style>
-			</Button.Style>
-		</Button>
+					<!-- Название процесса -->
+					<TextBlock Grid.Column="0"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       VerticalAlignment="Center"/>
+					<!--x:Name="GraphTitle" Text="График: chrome.exe"-->
+
+					<!-- Выбор диапазона -->
+					<ComboBox x:Name="ComboBoxDateRange"
+							  Grid.Column="1"
+							  Width="140"
+							  Margin="10,0,10,0"
+							  SelectionChanged="ComboBoxDateRange_SelectionChanged"
+							  VerticalAlignment="Center"
+							  Background="{DynamicResource TextBoxBackgroundBrush}"
+							  Foreground="{DynamicResource TextBoxBackgroundBrush}"
+							  BorderBrush="{DynamicResource TextBoxBorderBrush}">
+						<ComboBoxItem Content="Неделя (по дням)" Tag="week" IsSelected="True"/>
+						<ComboBoxItem Content="Месяц (по дням)" Tag="month"/>
+						<ComboBoxItem Content="Год (по месяцам)" Tag="year"/>
+						<ComboBoxItem Content="За всё время" Tag="all"/>
+					</ComboBox>
+
+					<!-- Кнопка закрытия -->
+					<Button x:Name="ButtonCloseGraph"
+							Grid.Column="2"
+							Content="✕"
+							Width="26" Height="26"
+							Padding="0"
+							Click="ButtonCloseGraph_Click"
+							VerticalAlignment="Center"
+							Foreground="{StaticResource ButtonTextBrush}"
+							Background="Transparent"
+							BorderThickness="0"
+							Cursor="Hand">
+						<Button.Style>
+							<Style TargetType="Button">
+								<Style.Triggers>
+									<Trigger Property="IsMouseOver" Value="True">
+										<Setter Property="Foreground" Value="#FFAAAAAA"/>
+									</Trigger>
+								</Style.Triggers>
+							</Style>
+						</Button.Style>
+					</Button>
+				</Grid>
+
+				<!-- Сам график -->
+				<lvc:CartesianChart x:Name="ProcessChart"
+									Height="200"
+									LegendLocation="None"
+									Hoverable="True">
+					<lvc:CartesianChart.DataTooltip>
+						<lvc:DefaultTooltip/>
+					</lvc:CartesianChart.DataTooltip>
+
+					<lvc:CartesianChart.AxisX>
+						<lvc:Axis x:Name="AxisX"
+								  Title="Дата"
+								  Foreground="{StaticResource TextSecondaryBrush}"
+								  FontSize="10"/>
+					</lvc:CartesianChart.AxisX>
+					<lvc:CartesianChart.AxisY>
+						<lvc:Axis x:Name="AxisY"
+								  Title="Мин"
+								  Foreground="{StaticResource TextSecondaryBrush}"
+								  FontSize="10"
+								  MinValue="0"/>
+					</lvc:CartesianChart.AxisY>
+				</lvc:CartesianChart>
+
+				<!-- Статус / сообщение -->
+				<TextBlock x:Name="GraphStatus"
+						   Text=""
+						   Margin="0"
+						   Foreground="{StaticResource TextSecondaryBrush}"
+						   FontSize="11"
+						   TextWrapping="Wrap"/>
+			</StackPanel>
+		</Border>
+		<!-- 👇 Контейнер для Toast-уведомлений -->
+		<Grid x:Name="ToastContainer"
+			  Grid.Column="0"
+			  Grid.ColumnSpan="3"
+			  Grid.Row="0"
+			  Grid.RowSpan="5"
+			  VerticalAlignment="Top"
+			  HorizontalAlignment="Center"
+			  Margin="0,20,0,0"
+			  Panel.ZIndex="1000"/>
 	</Grid>
 </Window>

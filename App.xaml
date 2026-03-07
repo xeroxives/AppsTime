@@ -2,8 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:AppsTime.Converters"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
+             >
+	<Application.Resources>
         <converters:IsRunningColorConverter x:Key="IsRunningColorConverter"/>
         <!-- ════════════════════════════════════════════════════════ -->
         <!-- ЦВЕТА (Color)                                            -->
@@ -92,7 +92,6 @@
 
         <SolidColorBrush x:Key="ListBoxBackgroundBrush" Color="{StaticResource ListBoxBackground}"/>
         <SolidColorBrush x:Key="ListBoxTextBrush" Color="{StaticResource ListBoxText}"/>
-        <SolidColorBrush x:Key="ListBoxBorderBrush" Color="{StaticResource ListBoxBorder}"/>
-
-    </Application.Resources>
+		<SolidColorBrush x:Key="ListBoxBorderBrush" Color="{StaticResource ListBoxBorder}"/>
+	</Application.Resources>
 </Application>

@@ -2,183 +2,770 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Настройки" 
-        Height="600" Width="700"
+        Height="650" Width="700"
         WindowStartupLocation="CenterOwner"
+		ResizeMode="NoResize"
         Background="{x:Null}">
 
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                <GradientStop Color="{StaticResource WindowBackgroundStart}" Offset="0"/>
-                <GradientStop Color="{StaticResource WindowBackgroundEnd}" Offset="0.511"/>
-            </LinearGradientBrush>
-        </Grid.Background>
+	<Grid>
+		<Grid.Background>
+			<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+				<GradientStop Color="{StaticResource WindowBackgroundStart}" Offset="0"/>
+				<GradientStop Color="{StaticResource WindowBackgroundEnd}" Offset="0.511"/>
+			</LinearGradientBrush>
+		</Grid.Background>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
 
-        <!-- Заголовок -->
-        <Label Grid.Row="0" x:Name="LabelSettingsTitle"
+		<!-- Заголовок -->
+		<Label Grid.Row="0" x:Name="LabelSettingsTitle"
                Content="Настройки приложения" 
                Foreground="{StaticResource TextPrimaryBrush}"
                FontSize="20" FontWeight="Bold"
                Margin="20,15,20,10"/>
 
-        <!-- TabControl для вкладок -->
-        <TabControl Grid.Row="1" Margin="20,10,20,10"
+		<!-- TabControl для вкладок -->
+		<TabControl Grid.Row="1" Margin="20,10,20,10"
                     Background="{StaticResource PanelBackgroundBrush}"
                     Foreground="{StaticResource TextPrimaryBrush}">
 
-            <!-- 👇 Вкладка 1: Общие -->
-            <TabItem Header="⚙️ Общие" x:Name="TabGeneral">
-                <Grid Margin="10">
+			<!-- 👇 Вкладка 1: Общие -->
+			<TabItem Header="⚙️ Общие" x:Name="TabGeneral">
+				<Grid Margin="10">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
                     <!-- 👇 Язык интерфейса -->
-                    <GroupBox x:Name="GroupBoxLanguage"
+                            <GroupBox x:Name="GroupBoxLanguage"
                               Grid.Row="0"
                               Header="Язык интерфейса"
                               Foreground="{StaticResource TextPrimaryBrush}"
                               Margin="0,0,0,10">
-                        <Grid Margin="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="17"/>
-                                <ColumnDefinition Width="183"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="17"/>
+                                    <ColumnDefinition Width="183"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
+                                <TextBlock Grid.Column="0"
                                        Text="Язык:"
                                        VerticalAlignment="Center"
                                        x:Name="LabelLanguage" Grid.ColumnSpan="2"/>
-                            <ComboBox x:Name="ComboBoxLanguage"
+                                <ComboBox x:Name="ComboBoxLanguage"
                                       Grid.Column="2"
                                       Height="30" Margin="5,5,10,5"
                                       Background="{StaticResource TextBoxBackgroundBrush}"
-                                      BorderBrush="{StaticResource TextBoxBorderBrush}" Foreground="Black">
-                                <ComboBox.Resources>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
-                                        <Setter Property="Padding" Value="5,3"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ComboBoxItem">
-                                                    <Border x:Name="Border"
+                                      BorderBrush="{StaticResource TextBoxBorderBrush}" 
+                                      Foreground="Black">
+                                    <ComboBox.Resources>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
+                                            <Setter Property="Padding" Value="5,3"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ComboBoxItem">
+                                                        <Border x:Name="Border"
                                                             Background="{TemplateBinding Background}"
                                                             Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
-                                                            <Setter Property="Foreground" Value="#FFFFFFFF"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ComboBox.Resources>
-                                <ComboBoxItem Content="Русский" Tag="ru"/>
-                                <ComboBoxItem Content="English" Tag="en"/>
-                            </ComboBox>
-                        </Grid>
-                    </GroupBox>
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
+                                                                <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ComboBox.Resources>
+                                    <ComboBoxItem Content="Русский" Tag="ru"/>
+                                    <ComboBoxItem Content="English" Tag="en"/>
+                                </ComboBox>
+                            </Grid>
+                        </GroupBox>
 
-                    <!-- Формат времени -->
-                    <GroupBox Grid.Row="1"
+                        <!-- 👇 НОВОЕ: Минимизировать при закрытии -->
+                        <GroupBox Grid.Row="1"
+                                  x:Name="GroupBoxMinimize"
+                                  Header="Закрытие приложения"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Margin="0,0,0,10">
+                            <StackPanel Margin="10">
+
+                                <!-- 👇 Переключатель: Сворачивать в трей при закрытии -->
+                                <CheckBox x:Name="CheckBoxMinimizeOnExit"
+                                          Content="Сворачивать в трей при закрытии"
+                                          VerticalAlignment="Center"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          FontSize="13"
+                                          Margin="0,0,0,13"
+                                          Cursor="Hand">
+                                    <CheckBox.Style>
+                                        <Style TargetType="CheckBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="CheckBox">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Переключатель -->
+                                                            <Border x:Name="toggleBorder"
+                                            Grid.Column="0"
+                                            Width="44" Height="22"
+                                            Background="#FFB0B0B0"
+                                            CornerRadius="11"
+                                            Margin="0,0,10,0"
+                                            Opacity="1.0">
+                                                                <Border x:Name="toggleCircle"
+                                                Width="18" Height="18"
+                                                Background="White"
+                                                CornerRadius="9"
+                                                HorizontalAlignment="Left"
+                                                Margin="2,2,0,2">
+                                                                    <Border.Effect>
+                                                                        <DropShadowEffect BlurRadius="4" 
+                                                                  ShadowDepth="1" 
+                                                                  Opacity="0.3"/>
+                                                                    </Border.Effect>
+                                                                    <Border.RenderTransform>
+                                                                        <TranslateTransform X="0"/>
+                                                                    </Border.RenderTransform>
+                                                                </Border>
+                                                            </Border>
+
+                                                            <!-- Текст -->
+                                                            <ContentPresenter Grid.Column="1"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}"/>
+                                                        </Grid>
+
+                                                        <ControlTemplate.Triggers>
+                                                            <!-- Когда CheckBox включен -->
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FFB0B0B0" To="#FF0078D4"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="0" To="22"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.3" To="0.5"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FF0078D4" To="#FFB0B0B0"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="22" To="0"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.5" To="0.3"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При наведении мыши -->
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.85"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.5"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="6"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="1.0"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.3"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="4"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При нажатии -->
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="toggleBorder" Property="Opacity" Value="0.7"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </CheckBox.Style>
+                                </CheckBox>
+
+                                <!-- 👇 Переключатель: Автозагрузка -->
+                                <CheckBox x:Name="CheckBoxAutoStart"
+                                          Content="Запускать приложение при старте Windows"
+                                          VerticalAlignment="Center"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          FontSize="13"
+                                          Margin="0,0,0,13"
+                                          Cursor="Hand"
+                                          Checked="CheckBoxAutoStart_Checked"
+                                          Unchecked="CheckBoxAutoStart_Unchecked">
+                                    <CheckBox.Style>
+                                        <Style TargetType="CheckBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="CheckBox">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Переключатель -->
+                                                            <Border x:Name="toggleBorder"
+                                            Grid.Column="0"
+                                            Width="44" Height="22"
+                                            Background="#FFB0B0B0"
+                                            CornerRadius="11"
+                                            Margin="0,0,10,0"
+                                            Opacity="1.0">
+                                                                <Border x:Name="toggleCircle"
+                                                Width="18" Height="18"
+                                                Background="White"
+                                                CornerRadius="9"
+                                                HorizontalAlignment="Left"
+                                                Margin="2,2,0,2">
+                                                                    <Border.Effect>
+                                                                        <DropShadowEffect BlurRadius="4" 
+                                                                  ShadowDepth="1" 
+                                                                  Opacity="0.3"/>
+                                                                    </Border.Effect>
+                                                                    <Border.RenderTransform>
+                                                                        <TranslateTransform X="0"/>
+                                                                    </Border.RenderTransform>
+                                                                </Border>
+                                                            </Border>
+
+                                                            <!-- Текст -->
+                                                            <ContentPresenter Grid.Column="1"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}"/>
+                                                        </Grid>
+
+                                                        <ControlTemplate.Triggers>
+                                                            <!-- Когда CheckBox включен -->
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FFB0B0B0" To="#FF0078D4"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="0" To="22"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.3" To="0.5"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FF0078D4" To="#FFB0B0B0"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="22" To="0"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.5" To="0.3"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При наведении мыши -->
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.85"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.5"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="6"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="1.0"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.3"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="4"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При нажатии -->
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="toggleBorder" Property="Opacity" Value="0.7"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </CheckBox.Style>
+                                </CheckBox>
+
+                                <!-- 👇 НОВЫЙ Переключатель: Сворачивать при запуске -->
+                                <CheckBox x:Name="CheckBoxMinimizeOnStart"
+                                            Content="Сворачивать в трей при запуске"
+                                            VerticalAlignment="Center"
+                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                            FontSize="13"
+                                            Margin="0,0,0,0"
+                                            Cursor="Hand"
+                                            IsEnabled="False">
+                                    <CheckBox.Style>
+                                        <Style TargetType="CheckBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="CheckBox">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Переключатель -->
+                                                            <Border x:Name="toggleBorder"
+                                            Grid.Column="0"
+                                            Width="44" Height="22"
+                                            Background="#FFB0B0B0"
+                                            CornerRadius="11"
+                                            Margin="0,0,10,0"
+                                            Opacity="1.0">
+                                                                <Border x:Name="toggleCircle"
+                                                Width="18" Height="18"
+                                                Background="White"
+                                                CornerRadius="9"
+                                                HorizontalAlignment="Left"
+                                                Margin="2,2,0,2">
+                                                                    <Border.Effect>
+                                                                        <DropShadowEffect BlurRadius="4" 
+                                                                  ShadowDepth="1" 
+                                                                  Opacity="0.3"/>
+                                                                    </Border.Effect>
+                                                                    <Border.RenderTransform>
+                                                                        <TranslateTransform X="0"/>
+                                                                    </Border.RenderTransform>
+                                                                </Border>
+                                                            </Border>
+
+                                                            <!-- Текст -->
+                                                            <ContentPresenter Grid.Column="1"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Content}"/>
+                                                        </Grid>
+
+                                                        <ControlTemplate.Triggers>
+                                                            <!-- Когда CheckBox включен -->
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FFB0B0B0" To="#FF0078D4"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="0" To="22"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.3" To="0.5"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ColorAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#FF0078D4" To="#FFB0B0B0"
+                                                        Duration="0:0:0.25">
+                                                                                <ColorAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </ColorAnimation.EasingFunction>
+                                                                            </ColorAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        From="22" To="0"
+                                                        Duration="0:0:0.25">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        From="0.5" To="0.3"
+                                                        Duration="0:0:0.25"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При наведении мыши -->
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.85"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.5"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="6"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleBorder"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="1.0"
+                                                        Duration="0:0:0.15">
+                                                                                <DoubleAnimation.EasingFunction>
+                                                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                                                </DoubleAnimation.EasingFunction>
+                                                                            </DoubleAnimation>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"
+                                                        To="0.3"
+                                                        Duration="0:0:0.15"/>
+
+                                                                            <DoubleAnimation
+                                                        Storyboard.TargetName="toggleCircle"
+                                                        Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                                        To="4"
+                                                        Duration="0:0:0.15"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
+                                                            </Trigger>
+
+                                                            <!-- При нажатии -->
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="toggleBorder" Property="Opacity" Value="0.7"/>
+                                                            </Trigger>
+
+                                                            <!-- 👇 Когда отключен (визуально показываем) -->
+                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                <Setter TargetName="toggleBorder" Property="Opacity" Value="0.5"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </CheckBox.Style>
+                                </CheckBox>
+
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Формат времени -->
+                            <GroupBox Grid.Row="2"
                               x:Name="GroupBoxTimeFormat"
                               Header="Формат отображения времени" 
                               Foreground="{StaticResource TextPrimaryBrush}"
                               Margin="0,0,0,10">
-                        <Grid Margin="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" 
+                                    <TextBlock Grid.Row="0" Grid.Column="0" 
                                Text="Формат времени:"
                                x:Name="LabelTimeFormat"
                                VerticalAlignment="Center" 
                                Margin="0,5"/>
-                            <ComboBox x:Name="ComboBoxTimeFormat" 
+                                    <ComboBox x:Name="ComboBoxTimeFormat" 
                                       Grid.Row="0" Grid.Column="1"
                                       Height="30" Margin="5,5,10,5"
                                       Background="{StaticResource TextBoxBackgroundBrush}"
                                       BorderBrush="{StaticResource TextBoxBorderBrush}"
                                       SelectionChanged="ComboBoxTimeFormat_SelectionChanged">
 
-                                <ComboBox.Resources>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
-                                        <Setter Property="Padding" Value="5,3"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ComboBoxItem">
-                                                    <Border x:Name="Border"
+                                        <ComboBox.Resources>
+                                            <Style TargetType="ComboBoxItem">
+                                                <Setter Property="Background" Value="{StaticResource TextBoxBackgroundBrush}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource TextBoxTextBrush}"/>
+                                                <Setter Property="Padding" Value="5,3"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ComboBoxItem">
+                                                            <Border x:Name="Border"
                                                             Background="{TemplateBinding Background}"
                                                             Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
-                                                            <Setter Property="Foreground" Value="#FFFFFFFF"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ComboBox.Resources>
+                                                                <ContentPresenter/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Border" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsSelected" Value="True">
+                                                                    <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
+                                                                    <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ComboBox.Resources>
 
-                                <ComboBoxItem Content="124 часов (целые часы)" Tag="hours_int" x:Name="int_timeformat"/>
-                                <ComboBoxItem Content="123.5 часов (дробные часы)" Tag="hours_float" x:Name="float_timeformat"/>
-                                <ComboBoxItem Content="123:30 (часы:минуты)" Tag="hh_mm" x:Name="h_m_timeformat"/>
-                                <ComboBoxItem Content="123:30:00 (часы:мин:сек)" Tag="hh_mm_ss" x:Name="h_m_s_timeformat"/>
-                                <ComboBoxItem Content="5:03:30 (дни:часы:мин)" Tag="dd_hh_mm" x:Name="d_h_m_timeformat"/>
-                                <ComboBoxItem Content="5:03:30:00 (дни:часы:мин:сек)" Tag="dd_hh_mm_ss" x:Name="d_h_m_s_timeformat"/>
-                            </ComboBox>
+                                        <ComboBoxItem Content="124 часов (целые часы)" Tag="hours_int" x:Name="int_timeformat"/>
+                                        <ComboBoxItem Content="123.5 часов (дробные часы)" Tag="hours_float" x:Name="float_timeformat"/>
+                                        <ComboBoxItem Content="123:30 (часы:минуты)" Tag="hh_mm" x:Name="h_m_timeformat"/>
+                                        <ComboBoxItem Content="123:30:00 (часы:мин:сек)" Tag="hh_mm_ss" x:Name="h_m_s_timeformat"/>
+                                        <ComboBoxItem Content="5:03:30 (дни:часы:мин)" Tag="dd_hh_mm" x:Name="d_h_m_timeformat"/>
+                                        <ComboBoxItem Content="5:03:30:00 (дни:часы:мин:сек)" Tag="dd_hh_mm_ss" x:Name="d_h_m_s_timeformat"/>
+                                    </ComboBox>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" 
+                                    <TextBlock Grid.Row="1" Grid.Column="0" 
                                Text="Пример:"
                                x:Name="LabelExample"
                                VerticalAlignment="Center" 
                                Margin="0,5"/>
-                            <TextBlock x:Name="TextBlockTimePreview" 
-                               Grid.Row="1" Grid.Column="1"
-                               Text="123:30:00" 
-                               VerticalAlignment="Center" 
-                               Margin="5,5,10,5"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               FontSize="14"/>
-                        </Grid>
-                    </GroupBox>
-
-                    <!-- Кнопки -->
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                        <Button x:Name="ButtonResetSettings" 
+                                    <TextBlock x:Name="TextBlockTimePreview" 
+                                               Grid.Row="1" Grid.Column="1"
+                                               Text="123:30:00" 
+                                               VerticalAlignment="Center" 
+                                               Margin="5,5,10,5"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="14"/>
+                                </Grid>
+                            </GroupBox>
+                            <!-- Кнопки -->
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,5">
+                            <Button x:Name="ButtonResetSettings" 
                                 Content="🔄 Сбросить"
                                 Width="120" Height="35" Margin="0,0,10,0"
                                 Background="{StaticResource ButtonDefaultBrush}"
@@ -186,7 +773,7 @@
                                 BorderThickness="0"
                                 Click="ButtonResetSettings_Click"
                                 Cursor="Hand"/>
-                        <Button x:Name="ButtonApplySettings" 
+                            <Button x:Name="ButtonApplySettings" 
                                 Content="💾 Применить"
                                 Width="130" Height="35"
                                 Background="{StaticResource ButtonSaveBrush}"
@@ -194,183 +781,184 @@
                                 BorderThickness="0"
                                 Click="ButtonApplySettings_Click"
                                 Cursor="Hand"/>
-                    </StackPanel>
+                        </StackPanel>
+
                 </Grid>
-            </TabItem>
+			</TabItem>
 
-            <!-- 👇 Вкладка 2: Цвета -->
-            <TabItem Header="🎨 Цвета" x:Name="TabColors">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+			<!-- 👇 Вкладка 2: Цвета -->
+			<TabItem Header="🎨 Цвета" x:Name="TabColors">
+				<Grid Margin="10">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Hidden">
-                        <StackPanel Margin="5">
+					<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Hidden">
+						<StackPanel Margin="5">
 
-                            <!-- Основные цвета -->
-                            <GroupBox Header="Основные цвета" x:Name="GroupBoxMainColors"
+							<!-- Основные цвета -->
+							<GroupBox Header="Основные цвета" x:Name="GroupBoxMainColors"
                           Foreground="{StaticResource TextPrimaryBrush}"
                           Margin="0,0,0,10">
-                                <Grid Margin="10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="60"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+								<Grid Margin="10">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="150"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="100"/>
+										<ColumnDefinition Width="60"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition/>
+										<RowDefinition/>
+										<RowDefinition/>
+									</Grid.RowDefinitions>
 
-                                    <TextBlock x:Name="LabelBackgroundStart" Grid.Row="0" Grid.Column="0" Text="Фон (начало):" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxWindowBackgroundStart" Grid.Row="0" Grid.Column="1" 
+									<TextBlock x:Name="LabelBackgroundStart" Grid.Row="0" Grid.Column="0" Text="Фон (начало):" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxWindowBackgroundStart" Grid.Row="0" Grid.Column="1" 
                                              Margin="5,5,10,5" Height="25"
                                              Background="{StaticResource TextBoxBackgroundBrush}"
                                              Foreground="{StaticResource TextBoxTextBrush}"
                                              BorderBrush="{StaticResource TextBoxBorderBrush}"
                                              TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderWindowBackgroundStart" Grid.Row="0" Grid.Column="3" 
+									<Border x:Name="BorderWindowBackgroundStart" Grid.Row="0" Grid.Column="3" 
                                             Height="25" Margin="5" 
                                             BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelBackgroundEnd" Grid.Row="1" Grid.Column="0" Text="Фон (конец):" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxWindowBackgroundEnd" Grid.Row="1" Grid.Column="1" 
+									<TextBlock x:Name="LabelBackgroundEnd" Grid.Row="1" Grid.Column="0" Text="Фон (конец):" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxWindowBackgroundEnd" Grid.Row="1" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
                                  Foreground="{StaticResource TextBoxTextBrush}"
                                  BorderBrush="{StaticResource TextBoxBorderBrush}"
                                  TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderWindowBackgroundEnd" Grid.Row="1" Grid.Column="3" 
+									<Border x:Name="BorderWindowBackgroundEnd" Grid.Row="1" Grid.Column="3" 
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelSelection" Grid.Row="2" Grid.Column="0" Text="Выделение:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxSelectedBackground" Grid.Row="2" Grid.Column="1" 
+									<TextBlock x:Name="LabelSelection" Grid.Row="2" Grid.Column="0" Text="Выделение:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxSelectedBackground" Grid.Row="2" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
                                  Foreground="{StaticResource TextBoxTextBrush}"
                                  BorderBrush="{StaticResource TextBoxBorderBrush}"
                                  TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderSelectedBackground" Grid.Row="2" Grid.Column="3" 
+									<Border x:Name="BorderSelectedBackground" Grid.Row="2" Grid.Column="3" 
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
-                                </Grid>
-                            </GroupBox>
+								</Grid>
+							</GroupBox>
 
-                            <!-- Цвета кнопок -->
-                            <GroupBox Header="Цвета кнопок" x:Name="GroupBoxButtonColors" 
+							<!-- Цвета кнопок -->
+							<GroupBox Header="Цвета кнопок" x:Name="GroupBoxButtonColors" 
                           Foreground="{StaticResource TextPrimaryBrush}"
                           Margin="0,0,0,10">
-                                <Grid Margin="10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="60"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+								<Grid Margin="10">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="150"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="100"/>
+										<ColumnDefinition Width="60"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition/>
+										<RowDefinition/>
+										<RowDefinition/>
+									</Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Save:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxButtonSave" Grid.Row="0" Grid.Column="1" 
+									<TextBlock Grid.Row="0" Grid.Column="0" Text="Save:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxButtonSave" Grid.Row="0" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
                                  Foreground="{StaticResource TextBoxTextBrush}"
                                  BorderBrush="{StaticResource TextBoxBorderBrush}"
                                  TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderButtonSave" Grid.Row="0" Grid.Column="3" 
+									<Border x:Name="BorderButtonSave" Grid.Row="0" Grid.Column="3" 
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxButtonExclude" Grid.Row="1" Grid.Column="1" 
+									<TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxButtonExclude" Grid.Row="1" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
                                  Foreground="{StaticResource TextBoxTextBrush}"
                                  BorderBrush="{StaticResource TextBoxBorderBrush}"
                                  TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderButtonExclude" Grid.Row="1" Grid.Column="3" 
+									<Border x:Name="BorderButtonExclude" Grid.Row="1" Grid.Column="3" 
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Settings:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxButtonInfo" Grid.Row="2" Grid.Column="1" 
+									<TextBlock Grid.Row="2" Grid.Column="0" Text="Settings:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxButtonInfo" Grid.Row="2" Grid.Column="1" 
                                  Margin="5,5,10,5" Height="25"
                                  Background="{StaticResource TextBoxBackgroundBrush}"
                                  Foreground="{StaticResource TextBoxTextBrush}"
                                  BorderBrush="{StaticResource TextBoxBorderBrush}"
                                  TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderButtonInfo" Grid.Row="2" Grid.Column="3" 
+									<Border x:Name="BorderButtonInfo" Grid.Row="2" Grid.Column="3" 
                                 Height="25" Margin="5" 
                                 BorderBrush="#FF606060" BorderThickness="1"/>
-                                </Grid>
-                            </GroupBox>
+								</Grid>
+							</GroupBox>
 
-                            <!-- Цвета текста -->
-                            <GroupBox Header="Цвета текста" x:Name="GroupBoxTextColors"
+							<!-- Цвета текста -->
+							<GroupBox Header="Цвета текста" x:Name="GroupBoxTextColors"
                                       Foreground="{StaticResource TextPrimaryBrush}"
                                       Margin="0,0,0,10">
-                                <Grid Margin="10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="60"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+								<Grid Margin="10">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="150"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="100"/>
+										<ColumnDefinition Width="60"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition/>
+										<RowDefinition/>
+										<RowDefinition/>
+									</Grid.RowDefinitions>
 
-                                    <TextBlock x:Name="LabelPrimary" Grid.Row="0" Grid.Column="0" Text="Основной:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxTextPrimary" Grid.Row="0" Grid.Column="1" 
+									<TextBlock x:Name="LabelPrimary" Grid.Row="0" Grid.Column="0" Text="Основной:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxTextPrimary" Grid.Row="0" Grid.Column="1" 
                                              Margin="5,5,10,5" Height="25"
                                              Background="{StaticResource TextBoxBackgroundBrush}"
                                              Foreground="{StaticResource TextBoxTextBrush}"
                                              BorderBrush="{StaticResource TextBoxBorderBrush}"
                                              TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderTextPrimary" Grid.Row="0" Grid.Column="3" 
+									<Border x:Name="BorderTextPrimary" Grid.Row="0" Grid.Column="3" 
                                             Height="25" Margin="5" 
                                             BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelSecondary" Grid.Row="1" Grid.Column="0" Text="Вторичный:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxTextSecondary" Grid.Row="1" Grid.Column="1" 
+									<TextBlock x:Name="LabelSecondary" Grid.Row="1" Grid.Column="0" Text="Вторичный:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxTextSecondary" Grid.Row="1" Grid.Column="1" 
                                              Margin="5,5,10,5" Height="25"
                                              Background="{StaticResource TextBoxBackgroundBrush}"
                                              Foreground="{StaticResource TextBoxTextBrush}"
                                              BorderBrush="{StaticResource TextBoxBorderBrush}"
                                              TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderTextSecondary" Grid.Row="1" Grid.Column="3" 
+									<Border x:Name="BorderTextSecondary" Grid.Row="1" Grid.Column="3" 
                                             Height="25" Margin="5" 
                                             BorderBrush="#FF606060" BorderThickness="1"/>
 
-                                    <TextBlock x:Name="LabelRunning" Grid.Row="2" Grid.Column="0" Text="Запущенные:" VerticalAlignment="Center" Margin="0,5"/>
-                                    <TextBox x:Name="TextBoxRunningProcessText" Grid.Row="2" Grid.Column="1" 
+									<TextBlock x:Name="LabelRunning" Grid.Row="2" Grid.Column="0" Text="Запущенные:" VerticalAlignment="Center" Margin="0,5"/>
+									<TextBox x:Name="TextBoxRunningProcessText" Grid.Row="2" Grid.Column="1" 
                                              Margin="5,5,10,5" Height="25"
                                              Background="{StaticResource TextBoxBackgroundBrush}"
                                              Foreground="{StaticResource TextBoxTextBrush}"
                                              BorderBrush="{StaticResource TextBoxBorderBrush}"
                                              TextChanged="ColorTextBox_TextChanged"/>
-                                    <Border x:Name="BorderRunningProcessText" Grid.Row="2" Grid.Column="3" 
+									<Border x:Name="BorderRunningProcessText" Grid.Row="2" Grid.Column="3" 
                 Height="25" Margin="5" 
                 BorderBrush="#FF606060" BorderThickness="1"/>
-                                </Grid>
-                            </GroupBox>
+								</Grid>
+							</GroupBox>
 
-                        </StackPanel>
-                    </ScrollViewer>
+						</StackPanel>
+					</ScrollViewer>
 
-                    <!-- Кнопки -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                        <Button x:Name="ButtonResetColors" 
+					<!-- Кнопки -->
+					<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+						<Button x:Name="ButtonResetColors" 
                                 Content="🔄 Сбросить"
                                 Width="120" Height="35" Margin="0,0,10,0"
                                 Background="{StaticResource ButtonDefaultBrush}"
@@ -378,7 +966,7 @@
                                 BorderThickness="0"
                                 Click="ButtonResetColors_Click"
                                 Cursor="Hand"/>
-                        <Button x:Name="ButtonApplyColors" 
+						<Button x:Name="ButtonApplyColors" 
                                 Content="💾 Применить"
                                 Width="130" Height="35"
                                 Background="{StaticResource ButtonSaveBrush}"
@@ -386,19 +974,19 @@
                                 BorderThickness="0"
                                 Click="ButtonApplyColors_Click"
                                 Cursor="Hand"/>
-                    </StackPanel>
-                </Grid>
-            </TabItem>
+					</StackPanel>
+				</Grid>
+			</TabItem>
 
-            <!-- 👇 Вкладка 3: Исключённые -->
-            <TabItem Header="📋 Исключённые" x:Name="TabExcluded">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+			<!-- 👇 Вкладка 3: Исключённые -->
+			<TabItem Header="📋 Исключённые" x:Name="TabExcluded">
+				<Grid Margin="10">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
 
-                    <ListBox x:Name="ListBoxExcluded" 
+					<ListBox x:Name="ListBoxExcluded" 
                              Grid.Row="0"
                              Background="{StaticResource ListBoxBackgroundBrush}"
                              Foreground="{StaticResource ListBoxTextBrush}"
@@ -406,22 +994,22 @@
                              BorderThickness="1"
                              Margin="0,0,0,10"
                              SelectionChanged="ListBoxExcluded_SelectionChanged">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{StaticResource ListBoxTextBrush}"/>
-                                <Setter Property="Padding" Value="5,3"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                    </ListBox>
+						<ListBox.ItemContainerStyle>
+							<Style TargetType="ListBoxItem">
+								<Setter Property="Background" Value="Transparent"/>
+								<Setter Property="Foreground" Value="{StaticResource ListBoxTextBrush}"/>
+								<Setter Property="Padding" Value="5,3"/>
+								<Style.Triggers>
+									<Trigger Property="IsSelected" Value="True">
+										<Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
+									</Trigger>
+								</Style.Triggers>
+							</Style>
+						</ListBox.ItemContainerStyle>
+					</ListBox>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button x:Name="ButtonRestore" 
+					<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+						<Button x:Name="ButtonRestore" 
                                 Content="Восстановить" 
                                 Width="110" Height="35" Margin="0,0,10,0"
                                 Background="{StaticResource ButtonSaveBrush}"
@@ -430,44 +1018,44 @@
                                 IsEnabled="False"
                                 Click="ButtonRestore_Click">
 
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="{StaticResource ButtonSaveBrush}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource ButtonTextBrush}"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border x:Name="Border"
+							<Button.Style>
+								<Style TargetType="Button">
+									<Setter Property="Background" Value="{StaticResource ButtonSaveBrush}"/>
+									<Setter Property="Foreground" Value="{StaticResource ButtonTextBrush}"/>
+									<Setter Property="BorderThickness" Value="0"/>
+									<Setter Property="Cursor" Value="Hand"/>
+									<Setter Property="Template">
+										<Setter.Value>
+											<ControlTemplate TargetType="Button">
+												<Border x:Name="Border"
                                                         Background="{TemplateBinding Background}"
                                                         BorderBrush="{TemplateBinding BorderBrush}"
                                                         BorderThickness="{TemplateBinding BorderThickness}"
                                                         CornerRadius="3">
-                                                    <ContentPresenter HorizontalAlignment="Center" 
+													<ContentPresenter HorizontalAlignment="Center" 
                                                                       VerticalAlignment="Center"
                                                                       Margin="10,5"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSaveHoverBrush}"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSavePressedBrush}"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="Border" Property="Background" Value="#FF505050"/>
-                                                        <Setter Property="Foreground" Value="#FF888888"/>
-                                                        <Setter Property="Cursor" Value="Arrow"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button x:Name="ButtonClearAll" 
+												</Border>
+												<ControlTemplate.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSaveHoverBrush}"/>
+													</Trigger>
+													<Trigger Property="IsPressed" Value="True">
+														<Setter TargetName="Border" Property="Background" Value="{StaticResource ButtonSavePressedBrush}"/>
+													</Trigger>
+													<Trigger Property="IsEnabled" Value="False">
+														<Setter TargetName="Border" Property="Background" Value="#FF505050"/>
+														<Setter Property="Foreground" Value="#FF888888"/>
+														<Setter Property="Cursor" Value="Arrow"/>
+													</Trigger>
+												</ControlTemplate.Triggers>
+											</ControlTemplate>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</Button.Style>
+						</Button>
+						<Button x:Name="ButtonClearAll" 
                                 Content="Очистить все" 
                                 Width="110" Height="35" Margin="0,0,10,0"
                                 Background="{StaticResource ButtonExcludeBrush}"
@@ -475,14 +1063,14 @@
                                 BorderThickness="0"
                                 Click="ButtonClearAll_Click"
                                 Cursor="Hand"/>
-                    </StackPanel>
-                </Grid>
-            </TabItem>
-        </TabControl>
+					</StackPanel>
+				</Grid>
+			</TabItem>
+		</TabControl>
 
-        <!-- Кнопки внизу -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,10,20,15">
-            <Button x:Name="ButtonClose" 
+		<!-- Кнопки внизу -->
+		<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,10,20,15">
+			<Button x:Name="ButtonClose" 
                     Content="Закрыть" 
                     Width="110" Height="35"
                     Background="{StaticResource ButtonDefaultBrush}"
@@ -490,6 +1078,6 @@
                     BorderThickness="0"
                     Click="ButtonClose_Click"
                     Cursor="Hand"/>
-        </StackPanel>
-    </Grid>
+		</StackPanel>
+	</Grid>
 </Window>

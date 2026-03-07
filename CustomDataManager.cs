@@ -10,10 +10,9 @@ namespace AppsTime.Data
 {
     public static class CustomDataManager
     {
-        private static readonly string FileName = "custom-logs.json";
+        private static readonly string FileName = "settings.json";
         private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName);
 
-        // 👇 Настройки JSON для красивого форматирования
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions()
         {
             WriteIndented = true,
@@ -27,20 +26,36 @@ namespace AppsTime.Data
         /// </summary>
         public static CustomData Load()
         {
-            try
+			string oldFilePath = Path.Combine(
+	                AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+
+			if (File.Exists(oldFilePath) && !File.Exists(FilePath))
+			{
+				try
+				{
+					// Переименовываем старый файл в новый
+					File.Move(oldFilePath, FilePath);
+					AppLogger.Log("Файл мигрирован: custom-logs.json → settings.json", "CustomData");
+				}
+				catch (Exception ex)
+				{
+					AppLogger.LogError($"[CustomData] Ошибка миграции: {ex.Message}");
+				}
+			}
+			try
             {
                 if (!File.Exists(FilePath))
                 {
-                    AppLogger.Log("[CustomData] Файл не найден, создаём новый");
+                    AppLogger.Log("Файл не найден, создаём новый", "CustomData");
                     return new CustomData();
                 }
 
                 var json = File.ReadAllText(FilePath);
                 var data = JsonSerializer.Deserialize<CustomData>(json, JsonOptions);
 
-                AppLogger.Log($"[CustomData] Загружено: {data?.NameAliases.Count ?? 0} алиасов, " +
+                AppLogger.Log($"Загружено: {data?.NameAliases.Count ?? 0} алиасов, " +
                              $"{data?.TimeOverrides.Count ?? 0} изменений времени, " +
-                             $"{data?.ExcludedProcesses.Count ?? 0} исключений");
+                             $"{data?.ExcludedProcesses.Count ?? 0} исключений", "CustomData");
 
                 return data ?? new CustomData();
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 
 namespace AppsTime.Models
 {
@@ -8,12 +9,23 @@ namespace AppsTime.Models
     {
         private string _processName;
         private int _totalSeconds;
-        private string _timeFormat = "hh_mm_ss"; // По умолчанию
+        //private string _timeFormat = "hh_mm_ss"; // По умолчанию
 
+        private ImageSource _icon;
         // 👇 Статическое свойство для глобального формата
         public static string GlobalTimeFormat { get; set; } = "hh_mm_ss";
+		public bool IsSeparator { get; set; } = false;
 
-        public string ProcessName
+		public ImageSource Icon
+		{
+			get => _icon;
+			set
+			{
+				_icon = value;
+				OnPropertyChanged();
+			}
+		}
+		public string ProcessName
         {
             get => _processName;
             set
